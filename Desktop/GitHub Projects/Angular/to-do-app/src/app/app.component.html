@@ -1,7 +1,12 @@
-<mat-card class="task-container">
+
+<h1>To-Do List</h1>
+<app-task-list></app-task-list>
+
+
+
+<!-- <mat-card class="task-container">
   <h2>Lista de Tareas</h2>
 
-  <!-- Campo de entrada para nueva tarea -->
   <mat-form-field appearance="outline">
     <mat-label>Nueva tarea</mat-label>
     <input matInput [(ngModel)]="newTask">
@@ -9,14 +14,14 @@
 
   <button mat-raised-button color="primary" (click)="addTask()">Agregar</button>
 
-  <!-- Filtros -->
+
   <div class="filters">
     <button mat-button [class.active]="filter === 'all'" (click)="setFilter('all')">Todas</button>
     <button mat-button [class.active]="filter === 'pending'" (click)="setFilter('pending')">Pendientes</button>
     <button mat-button [class.active]="filter === 'completed'" (click)="setFilter('completed')">Completadas</button>
   </div>
 
-  <!-- Lista de tareas filtradas -->
+
   <mat-list>
     <mat-list-item *ngFor="let task of getFilteredTasks(); let i = index">
       <span [class.completed]="task.completed">{{ task.text }}</span>
@@ -28,4 +33,4 @@
       </button>
     </mat-list-item>
   </mat-list>
-</mat-card>
+</mat-card> -->
