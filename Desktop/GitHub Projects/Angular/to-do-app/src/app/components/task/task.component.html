@@ -1,0 +1,16 @@
+<div class="task-container">
+    <h2>Lista de Tareas</h2>
+
+    <!-- Input para agregar nueva tarea -->
+    <input [(ngModel)]="newTask" placeholder="Nueva tarea" />
+    <button (click)="addTask()">Agregar</button>
+
+    <!-- Lista de tareas -->
+    <ul>
+        <li *ngFor="let task of tasks; let i = index">
+            <span [class.completed]="task.completed">{{ task.text }}</span>
+            <button (click)="toggleTask(i)">✔</button>
+            <button (click)="deleteTask(i)">🗑</button>
+        </li>
+    </ul>
+</div>
