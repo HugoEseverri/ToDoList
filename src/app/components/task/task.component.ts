@@ -7,7 +7,7 @@ import { TaskService } from '../../services/task.service';
   styleUrls: ['./task.component.scss']
 })
 export class TaskComponent{
-  @Input() task!: {text:string; completed: boolean; createdAt: Date}
+  @Input() task!: {text:string; completed:boolean; createdAt:Date}
   @Input() index!: number;
 
   constructor(private taskService: TaskService) {}
