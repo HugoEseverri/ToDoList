@@ -1,4 +1,21 @@
+.task {
+    display: flex;
+    justify-content: space-between;
+    background: wheat;
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+    transition: 0.3s;
+    &.completed {
+        text-decoration:line-through;
+        color:gray;
+    }
+}
 
+.actions {
+    display: flex;
+    gap: 5px;
+}
 
 
 
