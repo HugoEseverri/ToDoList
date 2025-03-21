@@ -2,7 +2,7 @@
     <span>{{ task.text }}</span>
     <div class="actions">
         <button mat-icon-button color="primary" (click)="toggleTask()">
-            <mat-icon>{{ tasl.completed ? 'check_box' : 'check_box_outline_blank' }}</mat-icon>
+            <mat-icon>{{ task.completed ? 'check_box' : 'check_box_outline_blank' }}</mat-icon>
         </button>
         <button mat-icon-button color="warn" (click)="deleteTask()">
             <mat-icon>delete</mat-icon>

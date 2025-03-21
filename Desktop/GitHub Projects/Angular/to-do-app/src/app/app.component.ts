@@ -6,6 +6,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatListModule } from '@angular/material/list';  // Importa MatListModule
 import { MatIconModule } from '@angular/material/icon';
+import { TaskListComponent } from './components/task-list/task-list.component';
 
 @Component({
   selector: 'app-root',
@@ -17,7 +18,8 @@ import { MatIconModule } from '@angular/material/icon';
     MatInputModule,
     MatListModule,
     FormsModule,
-    MatIconModule
+    MatIconModule,
+    TaskListComponent
   ],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']
