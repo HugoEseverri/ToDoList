@@ -4,9 +4,9 @@ import { Injectable } from "@angular/core";
     providedIn: 'root'
 })
 export class TaskService {
-    private tasks: { text: string; completed: boolean; createdAt: Date }[]=[]
+    private tasks: { text: string; completed: boolean; createdAt: Date }[] = []
 
-    constructor(){
+    constructor() {
         this.loadTasks();
     }
 
@@ -19,13 +19,13 @@ export class TaskService {
         this.tasks[index].completed = !this.tasks[index].completed;
         this.saveTasks()
     }
-    
+
     deleteTask(index: number) {
         this.tasks.splice(index, 1);
         this.saveTasks();
     }
 
-    getTasks(){
+    getTasks() {
         return this.tasks;
     }
 
@@ -33,10 +33,11 @@ export class TaskService {
         localStorage.setItem('tasks', JSON.stringify(this.tasks));
     }
 
-    private loadTasks(){
-        const storedTasks = localStorage.getItem('tasks');
-        if (storedTasks) {
-            this.tasks = JSON.parse(storedTasks);
+    loadTasks() {
+        if (typeof window !== 'undefined') {
+            const tasks = localStorage.getItem('tasks');
+            return tasks ? JSON.parse(tasks) : [];
         }
+        return [];
     }
 }

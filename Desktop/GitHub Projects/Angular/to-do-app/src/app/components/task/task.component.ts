@@ -1,8 +1,13 @@
 import { Component, Input } from '@angular/core';
 import { TaskService } from '../../services/task.service';
+import { MatIcon } from '@angular/material/icon';
 
 @Component({
   selector: 'app-task',
+  imports: [
+
+          MatIcon
+      ],
   templateUrl: './task.component.html',
   styleUrls: ['./task.component.scss']
 })
