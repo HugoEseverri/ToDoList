@@ -1,0 +1,41 @@
+.task-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+mat-form-field {
+    width: 100%;
+}
+
+
+button{
+margin-left: 10px;
+}
+
+.task {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: #f8f9fa;
+    padding: 12px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    margin-top: 10px;
+}
+
+
+.task .completed {
+    text-decoration: line-through;
+    color:gray;
+}
+
+
+.actions {
+    display: flex;
+    gap: 10px;
+}
+
+mat-icon {
+    cursor: pointer;
+}

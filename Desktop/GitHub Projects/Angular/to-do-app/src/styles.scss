@@ -1,6 +1,10 @@
 body {
     font-family: Arial, sans-serif;
-    background: #f4f4f4;
+    background: linear-gradient(to right, #3b9ef5, #05494d);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
 }
 html, body { height: 100%; }
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
