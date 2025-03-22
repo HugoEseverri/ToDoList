@@ -60,13 +60,13 @@ export class AppComponent implements OnInit {
   }
 
   loadTasks() {
-    if (typeof window !== 'undefined' && typeof window.localStorage !== 'undefined') {
-      const storedTasks = localStorage.getItem('tasks');
-      if (storedTasks) {
-        this.tasks = JSON.parse(storedTasks);
-      }
+    if (typeof window !== 'undefined') {
+      const tasks = localStorage.getItem('tasks');
+      return tasks ? JSON.parse(tasks) : [];
     }
+    return [];
   }
+  
 
   // Filtrar tareas según el filtro seleccionado
   getFilteredTasks() {

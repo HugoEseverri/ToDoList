@@ -16,7 +16,6 @@ import { MatIconModule } from '@angular/material/icon';
         MatInputModule,
         MatIconModule,
         FormsModule,
-        TaskComponent,
         NgFor
     ],
     templateUrl: './task-list.component.html',
