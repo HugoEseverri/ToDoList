@@ -1,7 +1,7 @@
 <div class="task-list">
     <mat-form-field>
         <input matInput placeholder="Nueva tarea" [(ngModel)]="newTask">
-        <button mat-raised-button color="primary" (click)="addTask()"></button>
+        <button mat-raised-button color="primary" (click)="addTask()">Agregar tarea</button>
     </mat-form-field>
 
     <div *ngFor="let task of tasks; let i = index">

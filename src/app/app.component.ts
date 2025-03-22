@@ -4,7 +4,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MatListModule } from '@angular/material/list';  // Importa MatListModule
+import { MatListModule } from '@angular/material/list';
 import { MatIconModule } from '@angular/material/icon';
 import { TaskListComponent } from './components/task-list/task-list.component';
 
@@ -27,7 +27,7 @@ import { TaskListComponent } from './components/task-list/task-list.component';
 export class AppComponent implements OnInit {
   tasks: { text: string; completed: boolean }[] = [];
   newTask: string = '';
-  filter: string = 'all'; // "all", "pending", "completed"
+  filter: string = 'all';
 
   constructor() {}
 
@@ -68,7 +68,6 @@ export class AppComponent implements OnInit {
   }
   
 
-  // Filtrar tareas según el filtro seleccionado
   getFilteredTasks() {
     if (this.filter === 'pending') {
       return this.tasks.filter(task => !task.completed);
