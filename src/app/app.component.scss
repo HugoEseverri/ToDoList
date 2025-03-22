@@ -1,38 +1,22 @@
-.task-container {
-    max-width: 400px;
-    margin: auto;
-    padding: 20px;
-    text-align: center;
-}
-
-.completed {
-    text-decoration: line-through;
-    color: gray;
-}
-
-mat-form-field {
-    width: 100%;
-    margin-bottom: 10px;
-}
-
-.filters {
+.container {
     display: flex;
+    width: 700px;
     justify-content: center;
-    gap: 10px;
-    margin-bottom: 15px;
-
-    button {
-        font-weight: bold;
-
-        &.active {
-            background-color: #3f51b5;
-            color: white;
-        }
+    align-items: center;
+    height: 100%;
+    flex-direction: column;
+    background: linear-gradient(135deg, #FFB6C1, #D1C4E9);
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    h1 {
+        font-size: 3rem;
+        font-family: 'Roboto', sans-serif;
+        color: #4A4A4A;
+        margin-bottom: 20px;
     }
 }
 
-mat-list-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
+
+
+

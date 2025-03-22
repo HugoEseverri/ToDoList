@@ -1,41 +1,62 @@
+
+
+mat-form-field {
+    width: 700px;
+    margin-bottom: 20px;
+    input {
+        background-color: white;
+        width: 450px;
+        font-size: 18px;
+        padding: 10px;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+    }
+
+    button {
+        padding: 12px 20px;
+        margin-left: 15px;
+        background-color: #4645a3;
+        color: white;
+        font-size: 16px;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        &:hover {
+            background-color: #7270ec;
+        }
+    }
+    
+} 
+
+
 .task-list {
     display: flex;
     flex-direction: column;
-    gap: 20px;
-}
-
-mat-form-field {
-    width: 100%;
-}
-
-
-button{
-margin-left: 10px;
-}
-
-.task {
-    display: flex;
     align-items: center;
     justify-content: space-between;
-    background-color: #f8f9fa;
-    padding: 12px;
-    border-radius: 8px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    margin-top: 10px;
-}
+    background-color: #bd7d7d;
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+    margin-top: 15px;
+    transition: all 0.3s ease;
+    
 
+    .completed {
+        text-decoration: line-through;
+        color: gray;
+    }
 
-.task .completed {
-    text-decoration: line-through;
-    color:gray;
-}
+    .actions {
+        display: flex;
+        gap: 12px;
+    }
 
-
-.actions {
-    display: flex;
-    gap: 10px;
-}
-
-mat-icon {
-    cursor: pointer;
+    mat-icon {
+        cursor: pointer;
+        transition: all 0.3s ease;
+        &:hover {
+            color: #3f51b5;
+        }
+    }
 }

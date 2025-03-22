@@ -1,85 +1,37 @@
 .task {
+    width: 650px;
     display: flex;
     justify-content: space-between;
-    background: wheat;
-    padding: 10px;
-    border-radius: 8px;
-    box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
-    transition: 0.3s;
+    align-items: center;
+    background: #ffffff;
+    padding: 15px;
+    margin-bottom: 15px;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+
+    &:hover {
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1); /* Sombra más intensa al pasar el mouse */
+    }
+
     &.completed {
-        text-decoration:line-through;
-        color:gray;
+        background-color: #f0f0f0;
+        color: gray;
+        text-decoration: line-through;
+    }
+
+    .actions {
+        display: flex;
+        gap: 10px;
+    }
+
+    mat-icon {
+        cursor: pointer;
+        transition: transform 0.2s ease, color 0.2s ease;
+        
+        &:hover {
+            transform: scale(1.2);
+            color: #3f51b5; /* Cambio de color del ícono al hacer hover */
+        }
     }
 }
-
-.actions {
-    display: flex;
-    gap: 5px;
-}
-
-
-
-
-// $primary-color: #4CAF50;
-// $secondary-color: #ff5252;
-// $text-color: #333;
-
-// .task-container {
-//     width: 300px;
-//     margin: auto;
-//     text-align: center;
-
-//     h2 {
-//         color: $primary-color;
-//     }
-
-//     input {
-//         padding: 5px;
-//         width: 200px;
-//         margin-right: 5px;
-//         border: 1px solid lighten($text-color, 50%);
-//         border-radius: 4px;
-//     }
-
-//     button {
-//         background: $primary-color;
-//         color: white;
-//         border: none;
-//         padding: 5px 10px;
-//         margin-left: 5px;
-//         cursor: pointer;
-//         border-radius: 4px;
-
-//         &:hover {
-//             background: darken($primary-color, 10%);
-//         }
-//     }
-
-//     ul {
-//         list-style: none;
-//         padding: 0;
-
-//         li {
-//             display: flex;
-//             justify-content: space-between;
-//             align-items: center;
-//             margin: 5px 0;
-//             padding: 5px;
-//             border: 1px solid #ddd;
-//             border-radius: 5px;
-
-//             .completed {
-//                 text-decoration: line-through;
-//                 color: gray;
-//             }
-
-//             .delete-btn {
-//                 background: $secondary-color;
-
-//                 &:hover {
-//                     background: darken($secondary-color, 10%);
-//                 }
-//             }
-//         }
-//     }
-// }
