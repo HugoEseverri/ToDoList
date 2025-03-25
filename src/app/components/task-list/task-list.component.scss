@@ -3,42 +3,53 @@ mat-form-field {
     margin-bottom: 20px;
 
     input {
-        background-color: rgba(255, 255, 255, 0.863);
+        background-color: #f0eeee;
         width: 450px;
         font-size: 18px;
         padding: 10px;
         box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        border-radius: 10px;
         transition: all 0.3s ease;
     }
 
     button {
         padding: 12px 20px;
         margin-left: 15px;
-        background-color: #bbbbd1;
+        background-color: #f5f4f4;
         color: black;
         font-size: 16px;
         border-radius: 8px;
         transition: all 0.3s ease;
 
         &:hover {
-            background-color: #80808a;
+            background-color: #9cacf5;
         }
     }
 
 }
-
+::ng-deep .mat-mdc-form-field-infix {
+    background-color: rgba(5, 3, 3, 0.863) !important;
+}
+::ng-deep .mat-mdc-form-field-infix {
+    padding: 15px !important;
+    border-radius: 0px !important;
+}
+::ng-deep .mat-mdc-text-field-wrapper {
+    padding: 0 !important;
+}
 
 .task-list {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: space-between;
-    background-color: #74A4BC;
+    background-color: #444444;
     padding: 15px;
     box-shadow: 0 3px 1px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
     margin-top: 15px;
     transition: all 0.3s ease;
-    max-height: calc(90vh - 200px); /* Ajusta según necesidad */
+    max-height: calc(90vh - 200px);
     overflow-y: auto;
 
 
@@ -61,7 +72,12 @@ mat-form-field {
         }
     }
 }
-
+.mat-form-field-appearance-fill .mat-form-field-flex {
+    background-color: #333333 !important;
+}
+.mat-form-field-wrapper {
+    background-color: transparent !important;
+}
 
 @media (max-width: 768px) {
     mat-form-field {
