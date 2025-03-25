@@ -4,10 +4,8 @@
         <button mat-raised-button color="primary" (click)="addTask()">Agregar tarea</button>
     </mat-form-field>
 
-    <div>
-        <div *ngFor="let task of tasks; let i = index">
-            <app-task [task]="task" [index]="i"></app-task>
-        </div>
+    <div *ngFor="let task of tasks; let i = index">
+        <app-task [task]="task" [index]="i"></app-task>
     </div>
 
 </div>

@@ -1,5 +1,5 @@
 .task {
-    width: 650px;
+    width: 100%;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -11,7 +11,7 @@
     transition: background-color 0.3s ease, box-shadow 0.3s ease;
 
     &:hover {
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1); /* Sombra más intensa al pasar el mouse */
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
     }
 
     &.completed {
@@ -31,7 +31,26 @@
         
         &:hover {
             transform: scale(1.2);
-            color: #3f51b5; /* Cambio de color del ícono al hacer hover */
+            color: #3f51b5;
         }
+    }
+}
+
+
+/* -------- Tablet (máx 768px) -------- */
+@media (max-width: 768px) {
+    .task {
+        width: 90%;
+        padding: 12px;
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
+
+/* -------- Móvil (máx 480px) -------- */
+@media (max-width: 480px) {
+    .task {
+        width: 100%;
+        padding: 10px;
     }
 }
