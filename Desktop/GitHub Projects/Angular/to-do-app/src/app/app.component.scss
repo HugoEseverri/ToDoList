@@ -4,14 +4,15 @@
     justify-content: center;
     align-items: center;
     flex-direction: column;
-    background: linear-gradient(135deg, #faeff1, #e8defa);
+    background: #222222;
+    border-radius: 10px;
     padding: 20px;
     box-shadow: 0 4px 1px rgba(0, 0, 0, 0.2);
     height: 90vh;
     h1 {
         font-size: 3rem;
         font-family: 'Roboto', sans-serif;
-        color: #4A4A4A;
+        color: #f0f0f0;
         margin-bottom: 20px;
     }
 }
@@ -19,7 +20,7 @@
 .taskListWidth {
     flex: 1;
     overflow-y: auto;
-    max-height: calc(90vh - 150px); /* Deja espacio para el título y el input */
+    max-height: calc(90vh - 150px);
     padding: 10px;
 }
 
