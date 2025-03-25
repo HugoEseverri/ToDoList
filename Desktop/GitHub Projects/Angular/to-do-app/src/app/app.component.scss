@@ -1,14 +1,13 @@
 .container {
     display: flex;
-    width: 700px;
+    width: 750px;
     justify-content: center;
     align-items: center;
-    height: 100%;
     flex-direction: column;
-    background: linear-gradient(135deg, #FFB6C1, #D1C4E9);
+    background: linear-gradient(135deg, #faeff1, #e8defa);
     padding: 20px;
-    border-radius: 15px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 4px 1px rgba(0, 0, 0, 0.2);
+    height: 90vh;
     h1 {
         font-size: 3rem;
         font-family: 'Roboto', sans-serif;
@@ -17,6 +16,34 @@
     }
 }
 
+.taskListWidth {
+    flex: 1;
+    overflow-y: auto;
+    max-height: calc(90vh - 150px); /* Deja espacio para el título y el input */
+    padding: 10px;
+}
 
 
+/* -------- Tablet (máx 768px) -------- */
+@media (max-width: 768px) {
+    .container {
+        width: 90%;
+        padding: 15px;
 
+        h1 {
+            font-size: 2.5rem;
+        }
+    }
+}
+
+/* -------- Móvil (máx 480px) -------- */
+@media (max-width: 480px) {
+    .container {
+        width: 100%;
+        padding: 10px;
+
+        h1 {
+            font-size: 2rem;
+        }
+    }
+}
