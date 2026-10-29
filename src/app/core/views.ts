@@ -5,18 +5,20 @@ export type ViewId = 'hoy' | 'proximas' | 'todas' | 'completadas';
 
 export interface ViewMeta {
   id: ViewId;
-  label: string;
   icon: IconName;
   /** Atajo de teclado para ir a la vista. */
   shortcut: string;
 }
 
+/** Vistas de tareas. El nombre visible sale de las traducciones (`view.<id>`). */
 export const VIEWS: ViewMeta[] = [
-  { id: 'hoy', label: 'Hoy', icon: 'sun', shortcut: '1' },
-  { id: 'proximas', label: 'Próximas', icon: 'calendar', shortcut: '2' },
-  { id: 'todas', label: 'Todas', icon: 'inbox', shortcut: '3' },
-  { id: 'completadas', label: 'Completadas', icon: 'circle-check', shortcut: '4' },
+  { id: 'hoy', icon: 'sun', shortcut: '1' },
+  { id: 'proximas', icon: 'calendar', shortcut: '2' },
+  { id: 'todas', icon: 'inbox', shortcut: '3' },
+  { id: 'completadas', icon: 'circle-check', shortcut: '4' },
 ];
+
+export const STATS_SHORTCUT = '5';
 
 /** Vista donde aparece una tarea, para poder navegar hasta ella. */
 export function viewForTask(task: Task, today: string): ViewId {

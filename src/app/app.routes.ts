@@ -1,21 +1,22 @@
 import { Routes } from '@angular/router';
 import { TaskPage } from './tasks/task-page';
 
+/** `data.titleKey` lo usa `I18nTitleStrategy` para el título de la pestaña en el idioma actual. */
 export const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'hoy' },
-  { path: 'hoy', component: TaskPage, data: { view: 'hoy' }, title: 'Hoy · Hecho' },
-  { path: 'proximas', component: TaskPage, data: { view: 'proximas' }, title: 'Próximas · Hecho' },
-  { path: 'todas', component: TaskPage, data: { view: 'todas' }, title: 'Todas · Hecho' },
+  { path: 'hoy', component: TaskPage, data: { view: 'hoy', titleKey: 'view.hoy' } },
+  { path: 'proximas', component: TaskPage, data: { view: 'proximas', titleKey: 'view.proximas' } },
+  { path: 'todas', component: TaskPage, data: { view: 'todas', titleKey: 'view.todas' } },
   {
     path: 'completadas',
     component: TaskPage,
-    data: { view: 'completadas' },
-    title: 'Completadas · Hecho',
+    data: { view: 'completadas', titleKey: 'view.completadas' },
   },
+  { path: 'etiqueta/:tag', component: TaskPage },
   {
-    path: 'etiqueta/:tag',
-    component: TaskPage,
-    title: (route) => `#${route.paramMap.get('tag')} · Hecho`,
+    path: 'estadisticas',
+    loadComponent: () => import('./stats/stats-page').then((m) => m.StatsPage),
+    data: { titleKey: 'view.estadisticas' },
   },
   { path: '**', redirectTo: 'hoy' },
 ];

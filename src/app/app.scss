@@ -1,7 +1,7 @@
 .layout {
   display: grid;
   grid-template-columns: var(--sidebar-width) 1fr;
-  height: 100dvh;
+  min-height: 100dvh;
 }
 
 .sidebar {
@@ -10,9 +10,9 @@
   height: 100dvh;
 }
 
+/* La página entera hace scroll (no un contenedor interno): es más accesible y nativo en celulares. */
 .main {
   min-width: 0;
-  overflow-y: auto;
 }
 
 .topbar,
@@ -24,10 +24,6 @@
 @media (max-width: 820px) {
   .layout {
     display: block;
-  }
-
-  .main {
-    height: 100dvh;
   }
 
   .sidebar {

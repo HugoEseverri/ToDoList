@@ -1,0 +1,125 @@
+<header class="header">
+  <span class="heading-icon"><app-icon name="chart" [size]="18" /></span>
+  <div>
+    <h1>{{ t('view.estadisticas') }}</h1>
+    <p class="subtitle">{{ t('stats.subtitle') }}</p>
+  </div>
+</header>
+
+<div class="tiles">
+  @for (tile of tiles(); track tile.label) {
+    <div class="tile">
+      <span class="tile-label"><app-icon [name]="tile.icon" [size]="14" />{{ tile.label }}</span>
+      <span class="tile-value">{{ tile.value }}</span>
+    </div>
+  }
+</div>
+
+@if (!hasActivity()) {
+  <p class="empty-note">{{ t('stats.empty') }}</p>
+}
+
+<section class="card">
+  <h2>{{ t('stats.activity', { n: weeks }) }}</h2>
+  <div
+    class="heatmap"
+    role="group"
+    [style.--weeks]="weeks"
+    [attr.aria-label]="t('stats.activity', { n: weeks })"
+  >
+    <div class="heatmap-months" aria-hidden="true">
+      <span></span>
+      @for (label of monthLabels(); track $index) {
+        <span>{{ label }}</span>
+      }
+    </div>
+    <div class="heatmap-body">
+      <div class="heatmap-days" aria-hidden="true">
+        @for (name of weekdayNames(); track $index) {
+          <span>{{ $index % 2 === 0 ? name : '' }}</span>
+        }
+      </div>
+      @for (column of columns(); track $index) {
+        <div class="heatmap-column">
+          @for (cell of column; track cell.date) {
+            <span
+              class="cell"
+              role="img"
+              [class]="'level-' + cell.level"
+              [attr.aria-label]="cellLabel(cell)"
+              (mouseenter)="showTip($event, cellLabel(cell))"
+              (mouseleave)="hideTip()"
+            ></span>
+          }
+        </div>
+      }
+    </div>
+  </div>
+  <div class="legend" aria-hidden="true">
+    {{ t('stats.less') }}
+    @for (level of [0, 1, 2, 3, 4]; track level) {
+      <span class="cell" [class]="'level-' + level"></span>
+    }
+    {{ t('stats.more') }}
+  </div>
+</section>
+
+<div class="grid">
+  <section class="card">
+    <h2>{{ t('stats.byWeekday') }}</h2>
+    <div class="bars" aria-hidden="true">
+      @for (day of weekdays(); track day.name) {
+        <div
+          class="bar-slot"
+          (mouseenter)="showTip($event, day.name + ': ' + day.count)"
+          (mouseleave)="hideTip()"
+        >
+          <div class="bar-track">
+            <div class="bar" [style.height.%]="day.ratio * 100"></div>
+          </div>
+          <span class="bar-label">{{ day.name }}</span>
+        </div>
+      }
+    </div>
+    <table class="visually-hidden">
+      <caption>
+        {{
+          t('stats.byWeekday')
+        }}
+      </caption>
+      <tbody>
+        @for (day of weekdays(); track day.name) {
+          <tr>
+            <th scope="row">{{ day.name }}</th>
+            <td>{{ day.count }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </section>
+
+  <section class="card">
+    <h2>{{ t('stats.topTags') }}</h2>
+    @if (tags().length) {
+      <ol class="tag-list">
+        @for (tag of tags(); track tag.tag) {
+          <li>
+            <span class="tag-name">#{{ tag.tag }}</span>
+            <span class="tag-bar" aria-hidden="true">
+              <span [style.width.%]="tag.ratio * 100"></span>
+            </span>
+            <span class="tag-count">{{ tag.count }}</span>
+          </li>
+        }
+      </ol>
+    } @else {
+      <p class="muted">{{ t('stats.noTags') }}</p>
+    }
+  </section>
+</div>
+
+@if (tip(); as tip) {
+  <div class="tooltip" role="presentation" [style.left.px]="tip.x" [style.top.px]="tip.y">
+    {{ tip.text }}
+  </div>
+}

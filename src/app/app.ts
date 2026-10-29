@@ -1,13 +1,15 @@
-import { Dialog } from '@angular/cdk/dialog';
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { Router, RouterOutlet } from '@angular/router';
-import { CommandPalette } from './command-palette/command-palette';
-import { ShortcutsDialog } from './command-palette/shortcuts-dialog';
+import { Dialogs } from './command-palette/dialogs';
 import { AppEvents } from './core/app-events';
+import { Reminders } from './core/reminders';
+import { TaskDetailState } from './core/task-detail-state';
 import { Theme } from './core/theme';
-import { VIEWS } from './core/views';
+import { STATS_SHORTCUT, VIEWS } from './core/views';
+import { I18n } from './i18n/i18n';
 import { Sidebar } from './layout/sidebar';
 import { ToastOutlet } from './layout/toast-outlet';
+import { TaskDetail } from './tasks/task-detail';
 import { Icon } from './ui/icon';
 
 const isTyping = (target: EventTarget | null) =>
@@ -16,7 +18,7 @@ const isTyping = (target: EventTarget | null) =>
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, Sidebar, ToastOutlet, Icon],
+  imports: [RouterOutlet, Sidebar, ToastOutlet, TaskDetail, Icon],
   templateUrl: './app.html',
   styleUrl: './app.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -26,17 +28,23 @@ export class App {
   private readonly router = inject(Router);
   private readonly events = inject(AppEvents);
   private readonly theme = inject(Theme);
-  private readonly dialog = inject(Dialog);
-  protected readonly palette = inject(CommandPalette);
-  private readonly shortcuts = inject(ShortcutsDialog);
+  private readonly detail = inject(TaskDetailState);
+  protected readonly dialogs = inject(Dialogs);
+  protected readonly i18n = inject(I18n);
+  protected readonly t = this.i18n.t;
 
   /** Menú lateral abierto (solo en pantallas chicas). */
   protected readonly navOpen = signal(false);
 
+  constructor() {
+    // Arranca el chequeo periódico de recordatorios.
+    inject(Reminders);
+  }
+
   protected onKeydown(event: KeyboardEvent): void {
     if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
       event.preventDefault();
-      this.palette.toggle();
+      void this.dialogs.togglePalette();
       return;
     }
     if (event.key === 'Escape' && this.navOpen()) {
@@ -44,21 +52,26 @@ export class App {
       return;
     }
     if (event.ctrlKey || event.metaKey || event.altKey || isTyping(event.target)) return;
-    if (this.dialog.openDialogs.length) return;
+    if (this.events.openDialogs() || this.detail.openId()) return;
 
-    const view = VIEWS.find((v) => v.shortcut === event.key);
+    const key = event.key.toLowerCase();
+    const view = VIEWS.find((v) => v.shortcut === key);
     if (view) {
       this.router.navigate(['/', view.id]);
-    } else if (event.key === 'n' || event.key === 'N') {
+    } else if (key === STATS_SHORTCUT) {
+      this.router.navigate(['/estadisticas']);
+    } else if (key === 'n') {
       event.preventDefault();
       this.events.focusQuickAdd$.next();
-    } else if (event.key === 't' || event.key === 'T') {
+    } else if (key === 't') {
       this.theme.cycle();
-    } else if (event.key === '?') {
-      this.shortcuts.open();
-    } else if (event.key === '/') {
+    } else if (key === 'l') {
+      this.i18n.toggle();
+    } else if (key === '?') {
+      void this.dialogs.openShortcuts();
+    } else if (key === '/') {
       event.preventDefault();
-      this.palette.open();
+      void this.dialogs.openPalette();
     }
   }
 }

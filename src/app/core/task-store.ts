@@ -1,14 +1,21 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
+import { I18n } from '../i18n/i18n';
 import { Clock } from './clock';
-import { addDays } from './dates';
+import { localDay } from './dates';
 import { ParsedTask } from './quick-add-parser';
-import { Task } from './task';
-import { TaskStorage } from './task-storage';
+import { nextOccurrence } from './recurrence';
+import { Subtask, Task } from './task';
+import { CompletionLog, TaskStorage } from './task-storage';
+import { createWelcomeTasks } from './welcome-tasks';
 
 export interface TagSummary {
   name: string;
   count: number;
 }
+
+/** Revierte una operación (para los botones "Deshacer"). */
+export type Undo = () => void;
+const NOTHING_TO_UNDO: Undo = () => undefined;
 
 const byOrder = (a: Task, b: Task) => a.order - b.order;
 const byDueThenOrder = (a: Task, b: Task) =>
@@ -21,11 +28,15 @@ const byDueThenOrder = (a: Task, b: Task) =>
 export class TaskStore {
   private readonly storage = inject(TaskStorage);
   private readonly clock = inject(Clock);
+  private readonly i18n = inject(I18n);
 
   private readonly _tasks = signal<Task[]>(
-    this.storage.load() ?? createWelcomeTasks(this.clock.today()),
+    this.storage.load() ?? createWelcomeTasks(this.clock.today(), this.i18n.t),
   );
+  private readonly _log = signal<CompletionLog>(this.storage.loadLog());
   readonly tasks = this._tasks.asReadonly();
+  /** Tareas completadas por día; alimenta las estadísticas. */
+  readonly log = this._log.asReadonly();
 
   readonly pending = computed(() =>
     this._tasks()
@@ -46,9 +57,7 @@ export class TaskStore {
       .filter((t) => t.done)
       .sort((a, b) => (b.completedAt ?? '').localeCompare(a.completedAt ?? '')),
   );
-  readonly completedToday = computed(
-    () => this.completed().filter((t) => t.completedAt?.startsWith(this.clock.today())).length,
-  );
+  readonly completedToday = computed(() => this._log()[this.clock.today()] ?? 0);
   readonly tags = computed<TagSummary[]>(() => {
     const counts = new Map<string, number>();
     for (const task of this._tasks()) {
@@ -66,12 +75,15 @@ export class TaskStore {
     this.storage.save(this._tasks());
   }
 
+  get(id: string): Task | undefined {
+    return this._tasks().find((t) => t.id === id);
+  }
+
   pendingWithTag(tag: string): Task[] {
     return this.pending().filter((t) => t.tags.includes(tag));
   }
 
-  add(parsed: ParsedTask): Task {
-    const tasks = this._tasks();
+  add(parsed: Omit<ParsedTask, 'tokens'>): Task {
     const task: Task = {
       id: crypto.randomUUID(),
       title: parsed.title,
@@ -80,11 +92,14 @@ export class TaskStore {
       due: parsed.due,
       time: parsed.time,
       tags: parsed.tags,
-      order: tasks.length ? Math.min(...tasks.map((t) => t.order)) - 1 : 0,
+      repeat: parsed.repeat,
+      notes: '',
+      subtasks: [],
+      order: this.topOrder(),
       createdAt: this.clock.now().toISOString(),
       completedAt: null,
     };
-    this.commit([task, ...tasks]);
+    this.commit([task, ...this._tasks()]);
     return task;
   }
 
@@ -92,31 +107,113 @@ export class TaskStore {
     this.commit(this._tasks().map((t) => (t.id === id ? { ...t, ...patch } : t)));
   }
 
-  toggle(id: string): void {
-    const task = this._tasks().find((t) => t.id === id);
+  /**
+   * Completa o reabre una tarea. Si se repite, queda una copia en "Completadas" y la tarea
+   * original pasa a su próxima fecha. Devuelve cómo deshacerlo.
+   */
+  toggle(id: string): Undo {
+    const task = this.get(id);
+    if (!task) return NOTHING_TO_UNDO;
+    const now = this.clock.now().toISOString();
+
+    if (task.done) {
+      this.update(id, { done: false, completedAt: null });
+      this.logCompletion(task.completedAt, -1);
+      return () => {
+        this.update(id, { done: true, completedAt: task.completedAt });
+        this.logCompletion(task.completedAt, 1);
+      };
+    }
+
+    if (task.repeat && task.due) {
+      const record: Task = {
+        ...task,
+        id: crypto.randomUUID(),
+        done: true,
+        completedAt: now,
+        repeat: null,
+        subtasks: task.subtasks.map((s) => ({ ...s })),
+      };
+      const next = nextOccurrence(task.due, task.repeat, this.clock.today());
+      this.commit([
+        ...this._tasks().map((t) =>
+          t.id === id
+            ? { ...t, due: next, subtasks: t.subtasks.map((s) => ({ ...s, done: false })) }
+            : t,
+        ),
+        record,
+      ]);
+      this.logCompletion(now, 1);
+      return () => {
+        this.commit([...this._tasks().filter((t) => t.id !== record.id && t.id !== id), task]);
+        this.logCompletion(now, -1);
+      };
+    }
+
+    this.update(id, { done: true, completedAt: now });
+    this.logCompletion(now, 1);
+    return () => {
+      this.update(id, { done: false, completedAt: null });
+      this.logCompletion(now, -1);
+    };
+  }
+
+  remove(id: string): Undo {
+    const task = this.get(id);
+    if (!task) return NOTHING_TO_UNDO;
+    this.commit(this._tasks().filter((t) => t.id !== id));
+    return () => this.restore(task);
+  }
+
+  clearCompleted(): { count: number; undo: Undo } {
+    const removed = this.completed();
+    this.commit(this._tasks().filter((t) => !t.done));
+    return { count: removed.length, undo: () => this.restore(...removed) };
+  }
+
+  /** Agrega tareas importadas o de ejemplo arriba de todo. Los ids repetidos se renuevan. */
+  addMany(tasks: Task[]): Undo {
+    const existing = new Set(this._tasks().map((t) => t.id));
+    const top = this.topOrder() - tasks.length;
+    const added = tasks.map((t, i) => ({
+      ...t,
+      id: existing.has(t.id) ? crypto.randomUUID() : t.id,
+      order: top + i,
+    }));
+    this.commit([...added, ...this._tasks()]);
+    const ids = new Set(added.map((t) => t.id));
+    return () => this.commit(this._tasks().filter((t) => !ids.has(t.id)));
+  }
+
+  addWelcomeTasks(): Undo {
+    return this.addMany(createWelcomeTasks(this.clock.today(), this.i18n.t));
+  }
+
+  addSubtask(taskId: string, title: string): void {
+    const task = this.get(taskId);
+    if (!task || !title.trim()) return;
+    const subtask: Subtask = { id: crypto.randomUUID(), title: title.trim(), done: false };
+    this.update(taskId, { subtasks: [...task.subtasks, subtask] });
+  }
+
+  updateSubtask(taskId: string, subtaskId: string, patch: Partial<Omit<Subtask, 'id'>>): void {
+    const task = this.get(taskId);
     if (!task) return;
-    this.update(id, {
-      done: !task.done,
-      completedAt: task.done ? null : this.clock.now().toISOString(),
+    this.update(taskId, {
+      subtasks: task.subtasks.map((s) => (s.id === subtaskId ? { ...s, ...patch } : s)),
     });
   }
 
-  remove(id: string): Task | undefined {
-    const task = this._tasks().find((t) => t.id === id);
-    if (task) this.commit(this._tasks().filter((t) => t.id !== id));
-    return task;
+  removeSubtask(taskId: string, subtaskId: string): void {
+    const task = this.get(taskId);
+    if (!task) return;
+    this.update(taskId, { subtasks: task.subtasks.filter((s) => s.id !== subtaskId) });
   }
 
   /** Vuelve a insertar tareas eliminadas (para "Deshacer"), conservando su posición. */
   restore(...tasks: Task[]): void {
     const ids = new Set(this._tasks().map((t) => t.id));
     this.commit([...this._tasks(), ...tasks.filter((t) => !ids.has(t.id))]);
-  }
-
-  clearCompleted(): Task[] {
-    const removed = this.completed();
-    this.commit(this._tasks().filter((t) => !t.done));
-    return removed;
   }
 
   /**
@@ -135,46 +232,25 @@ export class TaskStore {
     );
   }
 
+  private topOrder(): number {
+    const tasks = this._tasks();
+    return tasks.length ? Math.min(...tasks.map((t) => t.order)) - 1 : 0;
+  }
+
+  /** Registra (o descuenta, al deshacer) una tarea completada en el día correspondiente. */
+  private logCompletion(isoDateTime: string | null, delta: 1 | -1): void {
+    if (!isoDateTime) return;
+    const day = localDay(isoDateTime);
+    const log = { ...this._log() };
+    const count = Math.max(0, (log[day] ?? 0) + delta);
+    if (count) log[day] = count;
+    else delete log[day];
+    this._log.set(log);
+    this.storage.saveLog(log);
+  }
+
   private commit(tasks: Task[]): void {
     this._tasks.set(tasks);
     this.storage.save(tasks);
   }
-}
-
-/** Tareas de ejemplo para la primera visita: enseñan a usar la app usándola. */
-function createWelcomeTasks(today: string): Task[] {
-  const now = new Date().toISOString();
-  const base = {
-    done: false,
-    priority: 0,
-    due: null,
-    time: null,
-    tags: [],
-    createdAt: now,
-    completedAt: null,
-  } as const;
-  const seeds: Partial<Task>[] = [
-    {
-      title: 'Escribí "Llamar a Ana mañana 10hs #trabajo !alta" en la barra de arriba',
-      due: today,
-      priority: 3,
-      tags: ['bienvenida'],
-    },
-    { title: 'Abrí la paleta de comandos con Ctrl + K', due: today, tags: ['bienvenida'] },
-    { title: 'Arrastrá las tareas para reordenarlas', due: today, tags: ['bienvenida'] },
-    {
-      title: 'Navegá con ↑ ↓, completá con Espacio y editá con Enter',
-      due: today,
-      tags: ['bienvenida'],
-    },
-    {
-      title: 'Revisar las tareas de la semana',
-      due: addDays(today, 2),
-      time: '09:00',
-      priority: 2,
-      tags: ['personal'],
-    },
-    { title: 'Probá el modo claro y oscuro desde la barra lateral', tags: ['bienvenida'] },
-  ];
-  return seeds.map((seed, order) => ({ ...base, ...seed, id: crypto.randomUUID(), order }) as Task);
 }

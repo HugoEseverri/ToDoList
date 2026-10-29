@@ -4,7 +4,7 @@
     <input
       class="search-input"
       type="text"
-      placeholder="Buscar tareas o escribir un comando…"
+      [placeholder]="t('palette.placeholder')"
       autocomplete="off"
       role="combobox"
       aria-expanded="true"
@@ -21,11 +21,16 @@
     <kbd>Esc</kbd>
   </div>
 
-  <div #list id="palette-list" class="list" role="listbox" aria-label="Resultados">
+  <div #list id="palette-list" class="list" role="listbox" [attr.aria-label]="t('palette.results')">
     @for (item of items(); track item.id; let i = $index) {
       @if (i === 0 || items()[i - 1].group !== item.group) {
         <div class="group" role="presentation">{{ item.group }}</div>
       }
+      <!--
+        El foco queda en el buscador y las opciones se recorren con aria-activedescendant
+        (patrón combobox de ARIA), así que las opciones no necesitan foco propio.
+      -->
+      <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
       <div
         class="item"
         role="option"
@@ -45,13 +50,13 @@
         }
       </div>
     } @empty {
-      <p class="empty">Sin resultados para “{{ query() }}”</p>
+      <p class="empty">{{ t('palette.empty', { query: query() }) }}</p>
     }
   </div>
 
   <footer class="footer" aria-hidden="true">
-    <span><kbd>↑</kbd><kbd>↓</kbd> navegar</span>
-    <span><kbd>↵</kbd> elegir</span>
-    <span><kbd>Esc</kbd> cerrar</span>
+    <span><kbd>↑</kbd><kbd>↓</kbd> {{ t('palette.navigate') }}</span>
+    <span><kbd>↵</kbd> {{ t('palette.select') }}</span>
+    <span><kbd>Esc</kbd> {{ t('palette.close') }}</span>
   </footer>
 </div>

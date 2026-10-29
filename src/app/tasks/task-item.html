@@ -5,9 +5,10 @@
   tabindex="0"
   [class.is-done]="checked()"
   [class.is-editing]="editing()"
+  [class.is-open]="isOpen()"
   [attr.aria-label]="task().title"
   (keydown)="onKeydown($event)"
-  (dblclick)="startEdit()"
+  (click)="onRowClick($event)"
 >
   <button
     type="button"
@@ -15,9 +16,9 @@
     [class]="'priority-' + task().priority"
     role="checkbox"
     [attr.aria-checked]="checked()"
-    [attr.aria-label]="(checked() ? 'Marcar como pendiente: ' : 'Completar: ') + task().title"
+    [attr.aria-label]="t(checked() ? 'task.uncomplete' : 'task.complete', { title: task().title })"
     tabindex="-1"
-    (click)="complete(); $event.stopPropagation()"
+    (click)="complete()"
   >
     <svg viewBox="0 0 16 16" aria-hidden="true">
       <path d="M4 8.5 6.8 11 12 5.5" />
@@ -30,7 +31,7 @@
         #editInput
         class="edit-input"
         [value]="task().title"
-        aria-label="Editar tarea"
+        [attr.aria-label]="t('task.edit')"
         (keydown.enter)="saveEdit(editInput.value)"
         (keydown.escape)="cancelEdit()"
         (blur)="saveEdit(editInput.value)"
@@ -39,7 +40,14 @@
       <span class="title">{{ task().title }}</span>
     }
 
-    @if ((showDate() && dueLabel()) || task().time || task().tags.length) {
+    @if (
+      (showDate() && dueLabel()) ||
+      task().time ||
+      repeatLabel() ||
+      subtaskProgress() ||
+      task().notes ||
+      task().tags.length
+    ) {
       <div class="meta">
         @if (showDate() && dueLabel()) {
           <span class="chip due" [class]="'due-' + dueState()">
@@ -53,6 +61,25 @@
             {{ task().time }}
           </span>
         }
+        @if (repeatLabel(); as repeat) {
+          <span class="chip">
+            <app-icon name="repeat" [size]="12" />
+            {{ repeat }}
+          </span>
+        }
+        @if (subtaskProgress(); as progress) {
+          <span class="chip" [class.chip-complete]="progress.done === progress.total">
+            <app-icon name="list-checks" [size]="12" />
+            <span aria-hidden="true">{{ progress.done }}/{{ progress.total }}</span>
+            <span class="visually-hidden">{{ t('task.subtasks', progress) }}</span>
+          </span>
+        }
+        @if (task().notes) {
+          <span class="chip" [title]="t('task.hasNotes')">
+            <app-icon name="notes" [size]="12" />
+            <span class="visually-hidden">{{ t('task.hasNotes') }}</span>
+          </span>
+        }
         @for (tag of task().tags; track tag) {
           <span class="chip tag">
             #{{ tag }}
@@ -60,7 +87,7 @@
               <button
                 type="button"
                 class="tag-remove"
-                [attr.aria-label]="'Quitar etiqueta ' + tag"
+                [attr.aria-label]="t('task.removeTag', { tag })"
                 (mousedown)="$event.preventDefault()"
                 (click)="removeTag(tag)"
               >
@@ -75,15 +102,17 @@
 
   <div class="actions">
     @if (!task().done) {
-      <button
-        type="button"
-        class="icon-button date-button"
-        tabindex="-1"
-        title="Fecha (D)"
-        aria-label="Cambiar fecha"
-        (click)="openDatePicker()"
-      >
-        <app-icon name="calendar" [size]="15" />
+      <span class="date-picker">
+        <button
+          type="button"
+          class="icon-button"
+          tabindex="-1"
+          [title]="t('task.date')"
+          [attr.aria-label]="t('task.dateLabel')"
+          (click)="openDatePicker()"
+        >
+          <app-icon name="calendar" [size]="15" />
+        </button>
         <input
           #dateInput
           type="date"
@@ -93,14 +122,14 @@
           [value]="task().due ?? ''"
           (change)="setDate(dateInput.value)"
         />
-      </button>
+      </span>
       <button
         type="button"
         class="icon-button flag"
         [class]="'priority-' + task().priority"
         tabindex="-1"
-        [title]="'Prioridad: ' + priorityLabel() + ' (P)'"
-        [attr.aria-label]="'Prioridad: ' + priorityLabel()"
+        [title]="t('task.priority', { level: priorityLabel() })"
+        [attr.aria-label]="t('task.priorityLabel', { level: priorityLabel() })"
         (click)="cyclePriority()"
       >
         <app-icon name="flag" [size]="15" />
@@ -110,11 +139,21 @@
       type="button"
       class="icon-button delete"
       tabindex="-1"
-      title="Eliminar (Supr)"
-      aria-label="Eliminar tarea"
+      [title]="t('task.delete')"
+      [attr.aria-label]="t('task.deleteLabel')"
       (click)="remove()"
     >
       <app-icon name="trash" [size]="15" />
+    </button>
+    <button
+      type="button"
+      class="icon-button"
+      tabindex="-1"
+      [title]="t('task.open')"
+      [attr.aria-label]="t('task.open')"
+      (click)="openDetail()"
+    >
+      <app-icon name="chevron-right" [size]="15" />
     </button>
   </div>
 </div>

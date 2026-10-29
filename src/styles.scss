@@ -18,18 +18,19 @@
   --border: #e6e6ea;
   --border-strong: #d4d5db;
   --text: #1b1c1f;
-  --text-muted: #62666e;
-  --text-faint: #9a9da5;
-  --accent: #5b51e6;
-  --accent-hover: #4c42d6;
-  --accent-soft: rgb(91 81 230 / 0.1);
+  /* Todos los colores de texto cumplen 4.5:1 (WCAG AA) sobre cada superficie. */
+  --text-muted: #4f535a;
+  --text-faint: #62666e;
+  --accent: #4f45d8;
+  --accent-hover: #4239c4;
+  --accent-soft: rgb(79 69 216 / 0.1);
   --accent-contrast: #ffffff;
-  --danger: #dc3b40;
-  --danger-soft: rgb(220 59 64 / 0.1);
-  --priority-3: #e5484d;
-  --priority-2: #e38a0b;
-  --priority-1: #3b82f6;
-  --success: #1f9d6b;
+  --danger: #b42628;
+  --danger-soft: rgb(180 38 40 / 0.1);
+  --priority-3: #b42628;
+  --priority-2: #934f00;
+  --priority-1: #1d58c9;
+  --success: #0e6e44;
   --shadow-lg: 0 16px 48px rgb(15 16 20 / 0.14), 0 2px 6px rgb(15 16 20 / 0.06);
   --scrim: rgb(15 16 20 / 0.32);
 }
@@ -45,16 +46,16 @@
   --border-strong: #33363e;
   --text: #e7e8eb;
   --text-muted: #9095a0;
-  --text-faint: #5f636c;
-  --accent: #7f77ff;
-  --accent-hover: #918aff;
-  --accent-soft: rgb(127 119 255 / 0.14);
+  --text-faint: #8f949e;
+  --accent: #9690ff;
+  --accent-hover: #a7a2ff;
+  --accent-soft: rgb(150 144 255 / 0.14);
   --accent-contrast: #ffffff;
-  --danger: #f2555a;
-  --danger-soft: rgb(242 85 90 / 0.12);
-  --priority-3: #f2555a;
+  --danger: #ff6b6f;
+  --danger-soft: rgb(255 107 111 / 0.12);
+  --priority-3: #ff6b6f;
   --priority-2: #f5a524;
-  --priority-1: #5b9cff;
+  --priority-1: #6aa6ff;
   --success: #3ecf8e;
   --shadow-lg: 0 16px 48px rgb(0 0 0 / 0.5), 0 0 0 1px rgb(255 255 255 / 0.04);
   --scrim: rgb(0 0 0 / 0.5);
@@ -94,7 +95,9 @@ body {
 }
 
 button,
-input {
+input,
+textarea,
+select {
   font: inherit;
   color: inherit;
 }

@@ -1,0 +1,233 @@
+@if (task(); as task) {
+  <!-- Fondo decorativo: con teclado el panel se cierra con Esc. -->
+  <div
+    class="scrim"
+    aria-hidden="true"
+    animate.enter="scrim-enter"
+    animate.leave="scrim-leave"
+    (click)="close()"
+  ></div>
+  <aside
+    class="panel"
+    role="dialog"
+    aria-modal="true"
+    [attr.aria-label]="t('detail.title')"
+    cdkTrapFocus
+    animate.enter="panel-enter"
+    animate.leave="panel-leave"
+  >
+    <header class="panel-header">
+      <button
+        type="button"
+        class="check"
+        [class]="'priority-' + task.priority"
+        [class.is-done]="task.done"
+        role="checkbox"
+        [attr.aria-checked]="task.done"
+        [attr.aria-label]="
+          t(task.done ? 'task.uncomplete' : 'task.complete', { title: task.title })
+        "
+        (click)="toggle()"
+      >
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 8.5 6.8 11 12 5.5" /></svg>
+      </button>
+      <span class="panel-label">{{ t('detail.title') }}</span>
+      <button
+        type="button"
+        class="icon-button"
+        [attr.aria-label]="t('detail.close')"
+        [title]="t('detail.close') + ' (Esc)'"
+        (click)="close()"
+      >
+        <app-icon name="x" [size]="16" />
+      </button>
+    </header>
+
+    <div class="panel-body">
+      <textarea
+        #titleInput
+        class="title-input"
+        rows="1"
+        [attr.aria-label]="t('detail.titleLabel')"
+        [value]="task.title"
+        (focus)="autosize(titleInput)"
+        (input)="autosize(titleInput)"
+        (keydown)="onTitleKeydown($event, titleInput)"
+        (blur)="saveTitle(titleInput.value)"
+      ></textarea>
+
+      <dl class="fields">
+        <div class="field">
+          <dt><app-icon name="calendar" [size]="14" />{{ t('detail.due') }}</dt>
+          <dd>
+            <input
+              #dueInput
+              type="date"
+              class="control"
+              [attr.aria-label]="t('detail.due')"
+              [value]="task.due ?? ''"
+              (change)="setDue(dueInput.value)"
+            />
+          </dd>
+        </div>
+
+        <div class="field">
+          <dt><app-icon name="clock" [size]="14" />{{ t('detail.time') }}</dt>
+          <dd>
+            <input
+              #timeInput
+              type="time"
+              class="control"
+              [attr.aria-label]="t('detail.time')"
+              [value]="task.time ?? ''"
+              (change)="setTime(timeInput.value)"
+            />
+          </dd>
+        </div>
+
+        <div class="field">
+          <dt><app-icon name="flag" [size]="14" />{{ t('detail.priority') }}</dt>
+          <dd>
+            <div class="segmented" role="radiogroup" [attr.aria-label]="t('detail.priority')">
+              @for (p of priorities(); track p.level) {
+                <button
+                  type="button"
+                  role="radio"
+                  class="segment"
+                  [class]="'priority-' + p.level"
+                  [attr.aria-checked]="task.priority === p.level"
+                  [title]="p.label"
+                  (click)="setPriority(p.level)"
+                >
+                  <app-icon name="flag" [size]="14" />
+                  <span class="visually-hidden">{{ p.label }}</span>
+                </button>
+              }
+            </div>
+          </dd>
+        </div>
+
+        <div class="field">
+          <dt><app-icon name="repeat" [size]="14" />{{ t('detail.repeat') }}</dt>
+          <dd>
+            <select
+              #repeatSelect
+              class="control"
+              [attr.aria-label]="t('detail.repeat')"
+              [value]="repeatValue()"
+              (change)="setRepeat(repeatSelect.value)"
+            >
+              <option value="none">{{ t('repeat.none') }}</option>
+              @for (unit of repeatUnits; track unit) {
+                <option [value]="unit">
+                  {{ i18n.repeatLabel({ unit, every: 1 }, unit === 'week' ? task.due : null) }}
+                </option>
+              }
+              @if (repeatValue() === 'custom') {
+                <option value="custom">{{ i18n.repeatLabel(task.repeat!, task.due) }}</option>
+              }
+            </select>
+          </dd>
+        </div>
+
+        <div class="field field-tags">
+          <dt><app-icon name="hash" [size]="14" />{{ t('detail.tags') }}</dt>
+          <dd class="tags">
+            @for (tag of task.tags; track tag) {
+              <span class="tag">
+                #{{ tag }}
+                <button
+                  type="button"
+                  class="tag-remove"
+                  [attr.aria-label]="t('task.removeTag', { tag })"
+                  (click)="removeTag(tag)"
+                >
+                  <app-icon name="x" [size]="11" />
+                </button>
+              </span>
+            }
+            <input
+              #tagInput
+              class="tag-input"
+              [placeholder]="t('detail.addTag')"
+              [attr.aria-label]="t('detail.addTag')"
+              (keydown.enter)="addTag(tagInput)"
+              (blur)="addTag(tagInput)"
+            />
+          </dd>
+        </div>
+      </dl>
+
+      <section class="block">
+        <h3><app-icon name="notes" [size]="14" />{{ t('detail.notes') }}</h3>
+        <textarea
+          #notesInput
+          class="notes"
+          rows="3"
+          [placeholder]="t('detail.notesPlaceholder')"
+          [attr.aria-label]="t('detail.notes')"
+          [value]="task.notes"
+          (focus)="autosize(notesInput)"
+          (input)="autosize(notesInput); setNotes(notesInput.value)"
+        ></textarea>
+      </section>
+
+      <section class="block">
+        <h3>
+          <app-icon name="list-checks" [size]="14" />{{ t('detail.subtasks') }}
+          @if (task.subtasks.length) {
+            <span class="count">{{ subtasksDone() }}/{{ task.subtasks.length }}</span>
+          }
+        </h3>
+        <ul class="subtasks">
+          @for (subtask of task.subtasks; track subtask.id) {
+            <li class="subtask" [class.is-done]="subtask.done" animate.enter="enter">
+              <input
+                #subtaskCheck
+                type="checkbox"
+                class="subtask-check"
+                [checked]="subtask.done"
+                [attr.aria-label]="subtask.title"
+                (change)="toggleSubtask(subtask.id, subtaskCheck.checked)"
+              />
+              <input
+                #subtaskTitle
+                class="subtask-title"
+                [value]="subtask.title"
+                [attr.aria-label]="t('detail.subtasks')"
+                (keydown.enter)="subtaskTitle.blur()"
+                (blur)="renameSubtask(subtask.id, subtaskTitle.value)"
+              />
+              <button
+                type="button"
+                class="icon-button subtask-remove"
+                [attr.aria-label]="t('detail.deleteSubtask')"
+                (click)="removeSubtask(subtask.id)"
+              >
+                <app-icon name="x" [size]="13" />
+              </button>
+            </li>
+          }
+          <li class="subtask subtask-new">
+            <app-icon name="plus" [size]="14" />
+            <input
+              #newSubtask
+              class="subtask-title"
+              [placeholder]="t('detail.addSubtask')"
+              [attr.aria-label]="t('detail.addSubtask')"
+              (keydown.enter)="addSubtask(newSubtask)"
+            />
+          </li>
+        </ul>
+      </section>
+    </div>
+
+    <footer class="panel-footer">
+      <span>{{ createdLabel() }}</span>
+      <button type="button" class="danger-button" (click)="remove()">
+        <app-icon name="trash" [size]="14" />
+        {{ t('detail.delete') }}
+      </button>
+    </footer>
+  </aside>
+}

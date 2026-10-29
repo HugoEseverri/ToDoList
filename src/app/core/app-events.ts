@@ -10,4 +10,6 @@ export class AppEvents {
    * y la vista de destino la consume recién cuando termina de renderizar.
    */
   readonly taskToFocus = signal<string | null>(null);
+  /** Diálogos abiertos (paleta, atajos): mientras haya alguno, los atajos globales se pausan. */
+  readonly openDialogs = signal(0);
 }

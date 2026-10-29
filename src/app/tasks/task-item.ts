@@ -13,13 +13,15 @@ import {
 import { Clock } from '../core/clock';
 import { formatRelativeDay } from '../core/dates';
 import { parseQuickAdd } from '../core/quick-add-parser';
-import { PRIORITY_LABELS, Priority, Task } from '../core/task';
+import { Priority, Task } from '../core/task';
+import { TaskDetailState } from '../core/task-detail-state';
 import { TaskStore } from '../core/task-store';
 import { Toast } from '../core/toast';
+import { I18n } from '../i18n/i18n';
 import { Icon } from '../ui/icon';
 
 /** Ciclo al tocar la bandera: sin prioridad → alta → media → baja → sin prioridad. */
-const NEXT_PRIORITY: Record<Priority, Priority> = { 0: 3, 3: 2, 2: 1, 1: 0 };
+export const NEXT_PRIORITY: Record<Priority, Priority> = { 0: 3, 3: 2, 2: 1, 1: 0 };
 const COMPLETE_DELAY_MS = 380;
 
 @Component({
@@ -33,24 +35,28 @@ export class TaskItem {
   private readonly store = inject(TaskStore);
   private readonly toast = inject(Toast);
   private readonly clock = inject(Clock);
+  private readonly detail = inject(TaskDetailState);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly injector = inject(Injector);
+  protected readonly i18n = inject(I18n);
+  protected readonly t = this.i18n.t;
 
   readonly task = input.required<Task>();
-  /** En "Próximas" la fecha ya está en el encabezado del grupo. */
+  /** Se oculta cuando el encabezado de la sección ya indica la fecha. */
   readonly showDate = input(true);
 
   protected readonly editing = signal(false);
   /** Estado visual inmediato al completar, antes de que la tarea salga de la lista. */
   protected readonly completing = signal(false);
   protected readonly checked = computed(() => this.task().done || this.completing());
+  protected readonly isOpen = computed(() => this.detail.openId() === this.task().id);
 
   protected readonly editInput = viewChild<ElementRef<HTMLInputElement>>('editInput');
   protected readonly dateInput = viewChild<ElementRef<HTMLInputElement>>('dateInput');
 
   protected readonly dueLabel = computed(() => {
     const due = this.task().due;
-    return due ? formatRelativeDay(due, this.clock.today()) : null;
+    return due ? formatRelativeDay(due, this.clock.today(), this.i18n.lang()) : null;
   });
   protected readonly dueState = computed(() => {
     const due = this.task().due;
@@ -58,7 +64,17 @@ export class TaskItem {
     const today = this.clock.today();
     return due < today ? 'overdue' : due === today ? 'today' : 'normal';
   });
-  protected readonly priorityLabel = computed(() => PRIORITY_LABELS[this.task().priority]);
+  protected readonly repeatLabel = computed(() => {
+    const { repeat, due } = this.task();
+    return repeat ? this.i18n.repeatLabel(repeat, due) : null;
+  });
+  protected readonly subtaskProgress = computed(() => {
+    const subtasks = this.task().subtasks;
+    return subtasks.length
+      ? { done: subtasks.filter((s) => s.done).length, total: subtasks.length }
+      : null;
+  });
+  protected readonly priorityLabel = computed(() => this.t(`priority.${this.task().priority}`));
 
   complete(): void {
     const task = this.task();
@@ -69,15 +85,25 @@ export class TaskItem {
     if (this.completing()) return;
     this.completing.set(true);
     setTimeout(() => {
-      this.store.toggle(task.id);
-      this.toast.undoable('Tarea completada', () => this.store.toggle(task.id));
+      const undo = this.store.toggle(task.id);
+      const next = this.store.get(task.id);
+      // Las tareas repetitivas siguen en la lista con su próxima fecha.
+      this.completing.set(false);
+      const message =
+        task.repeat && next?.due
+          ? this.t('task.completedRepeat', {
+              date: formatRelativeDay(next.due, this.clock.today(), this.i18n.lang()),
+            })
+          : this.t('task.completed');
+      this.toast.show(message, { actionLabel: this.t('task.undo'), action: undo });
     }, COMPLETE_DELAY_MS);
   }
 
   remove(): void {
-    this.focusSibling(1) || this.focusSibling(-1);
-    const removed = this.store.remove(this.task().id);
-    if (removed) this.toast.undoable('Tarea eliminada', () => this.store.restore(removed));
+    if (!this.focusSibling(1)) this.focusSibling(-1);
+    if (this.isOpen()) this.detail.close();
+    const undo = this.store.remove(this.task().id);
+    this.toast.show(this.t('task.deleted'), { actionLabel: this.t('task.undo'), action: undo });
   }
 
   cyclePriority(): void {
@@ -94,10 +120,15 @@ export class TaskItem {
     }
   }
 
+  openDetail(): void {
+    this.detail.open(this.task().id);
+  }
+
   protected setDate(value: string): void {
     this.store.update(this.task().id, {
       due: value || null,
       time: value ? this.task().time : null,
+      repeat: value ? this.task().repeat : null,
     });
   }
 
@@ -119,7 +150,7 @@ export class TaskItem {
     if (!this.editing()) return;
     this.editing.set(false);
     // El texto editado también acepta lenguaje natural: "... mañana #casa" agrega fecha y etiqueta.
-    const parsed = parseQuickAdd(value, this.clock.today());
+    const parsed = parseQuickAdd(value, this.clock.today(), this.i18n.lang());
     const task = this.task();
     if (!parsed.title) return;
     this.store.update(task.id, {
@@ -127,6 +158,7 @@ export class TaskItem {
       due: parsed.due ?? task.due,
       time: parsed.time ?? task.time,
       priority: parsed.priority || task.priority,
+      repeat: parsed.repeat ?? task.repeat,
       tags: [...new Set([...task.tags, ...parsed.tags])],
     });
     this.focusRow();
@@ -141,14 +173,22 @@ export class TaskItem {
     this.store.update(this.task().id, { tags: this.task().tags.filter((t) => t !== tag) });
   }
 
+  protected onRowClick(event: MouseEvent): void {
+    // Los clics en botones e inputs tienen su propia acción.
+    if ((event.target as HTMLElement).closest('button, input')) return;
+    if (!this.editing()) this.openDetail();
+  }
+
   protected onKeydown(event: KeyboardEvent): void {
     if (this.editing() || event.target !== event.currentTarget) return;
     const actions: Record<string, () => unknown> = {
       ArrowDown: () => this.focusSibling(1),
       ArrowUp: () => this.focusSibling(-1),
       ' ': () => this.complete(),
-      Enter: () => this.startEdit(),
+      Enter: () => this.openDetail(),
+      o: () => this.openDetail(),
       e: () => this.startEdit(),
+      F2: () => this.startEdit(),
       Delete: () => this.remove(),
       Backspace: () => this.remove(),
       p: () => this.cyclePriority(),

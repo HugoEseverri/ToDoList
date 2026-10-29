@@ -1,62 +1,17 @@
 import { Dialog, DialogRef } from '@angular/cdk/dialog';
 import { Overlay } from '@angular/cdk/overlay';
-import { ChangeDetectionStrategy, Component, Injectable, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Injector, computed, inject } from '@angular/core';
+import { STATS_SHORTCUT, VIEWS } from '../core/views';
+import { I18n } from '../i18n/i18n';
 import { Icon } from '../ui/icon';
 
-const GROUPS: { title: string; items: [keys: string[], label: string][] }[] = [
-  {
-    title: 'General',
-    items: [
-      [['Ctrl', 'K'], 'Paleta de comandos'],
-      [['N'], 'Nueva tarea'],
-      [['1'], 'Ir a Hoy'],
-      [['2'], 'Ir a Próximas'],
-      [['3'], 'Ir a Todas'],
-      [['4'], 'Ir a Completadas'],
-      [['T'], 'Cambiar tema'],
-      [['?'], 'Ver atajos'],
-    ],
-  },
-  {
-    title: 'Tarea seleccionada',
-    items: [
-      [['↑', '↓'], 'Moverse entre tareas'],
-      [['Espacio'], 'Completar'],
-      [['Enter'], 'Editar'],
-      [['P'], 'Cambiar prioridad'],
-      [['D'], 'Cambiar fecha'],
-      [['Supr'], 'Eliminar'],
-    ],
-  },
-  {
-    title: 'Al escribir una tarea',
-    items: [
-      [['mañana', '18hs'], 'Fecha y hora'],
-      [['el viernes'], 'Próximo día de la semana'],
-      [['15/11'], 'Fecha exacta'],
-      [['#etiqueta'], 'Etiqueta'],
-      [['!alta'], 'Prioridad (!alta, !media, !baja)'],
-    ],
-  },
-];
-
-@Injectable({ providedIn: 'root' })
-export class ShortcutsDialog {
-  private readonly dialog = inject(Dialog);
-  private readonly overlay = inject(Overlay);
-
-  open(): void {
-    if (
-      this.dialog.openDialogs.some((d) => d.componentInstance instanceof ShortcutsDialogComponent)
-    )
-      return;
-    this.dialog.open(ShortcutsDialogComponent, {
-      ariaLabelledBy: 'shortcuts-title',
-      panelClass: 'app-dialog-panel',
-      backdropClass: 'cdk-overlay-dark-backdrop',
-      positionStrategy: this.overlay.position().global().centerHorizontally().top('10vh'),
-    });
-  }
+export function openShortcutsDialog(injector: Injector): DialogRef<unknown, ShortcutsDialog> {
+  return injector.get(Dialog).open(ShortcutsDialog, {
+    ariaLabelledBy: 'shortcuts-title',
+    panelClass: 'app-dialog-panel',
+    backdropClass: 'cdk-overlay-dark-backdrop',
+    positionStrategy: injector.get(Overlay).position().global().centerHorizontally().top('8vh'),
+  });
 }
 
 @Component({
@@ -66,21 +21,26 @@ export class ShortcutsDialog {
   template: `
     <div class="panel">
       <header>
-        <h2 id="shortcuts-title">Atajos de teclado</h2>
-        <button type="button" class="icon-button" aria-label="Cerrar" (click)="ref.close()">
+        <h2 id="shortcuts-title">{{ t('shortcuts.title') }}</h2>
+        <button
+          type="button"
+          class="icon-button"
+          [attr.aria-label]="t('detail.close')"
+          (click)="ref.close()"
+        >
           <app-icon name="x" [size]="16" />
         </button>
       </header>
       <div class="groups">
-        @for (group of groups; track group.title) {
+        @for (group of groups(); track group.title) {
           <section>
             <h3>{{ group.title }}</h3>
             <dl>
-              @for (item of group.items; track item[1]) {
+              @for (item of group.items; track item.label) {
                 <div class="row">
-                  <dt>{{ item[1] }}</dt>
+                  <dt>{{ item.label }}</dt>
                   <dd>
-                    @for (key of item[0]; track key) {
+                    @for (key of item.keys; track key) {
                       <kbd>{{ key }}</kbd>
                     }
                   </dd>
@@ -94,7 +54,7 @@ export class ShortcutsDialog {
   `,
   styles: `
     .panel {
-      max-height: 80vh;
+      max-height: 84vh;
       overflow-y: auto;
       border: 1px solid var(--border-strong);
       border-radius: var(--radius-lg);
@@ -146,12 +106,62 @@ export class ShortcutsDialog {
     }
     dd {
       display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
       gap: 4px;
       margin: 0;
     }
   `,
 })
-export class ShortcutsDialogComponent {
+export class ShortcutsDialog {
   protected readonly ref = inject(DialogRef);
-  protected readonly groups = GROUPS;
+  private readonly i18n = inject(I18n);
+  protected readonly t = this.i18n.t;
+
+  protected readonly groups = computed(() => {
+    const t = this.t;
+    const views = [
+      ...VIEWS.map((v) => ({
+        keys: [v.shortcut],
+        label: t('shortcuts.goto', { view: t(`view.${v.id}`) }),
+      })),
+      { keys: [STATS_SHORTCUT], label: t('shortcuts.goto', { view: t('view.estadisticas') }) },
+    ];
+    return [
+      {
+        title: t('shortcuts.general'),
+        items: [
+          { keys: ['Ctrl', 'K'], label: t('shortcuts.palette') },
+          { keys: ['N'], label: t('shortcuts.new') },
+          ...views,
+          { keys: ['T'], label: t('shortcuts.theme') },
+          { keys: ['L'], label: t('shortcuts.language') },
+          { keys: ['?'], label: t('shortcuts.help') },
+        ],
+      },
+      {
+        title: t('shortcuts.task'),
+        items: [
+          { keys: ['↑', '↓'], label: t('shortcuts.move') },
+          { keys: [t('key.space')], label: t('shortcuts.complete') },
+          { keys: ['Enter'], label: t('shortcuts.open') },
+          { keys: ['E'], label: t('shortcuts.edit') },
+          { keys: ['P'], label: t('shortcuts.priority') },
+          { keys: ['D'], label: t('shortcuts.date') },
+          { keys: [t('key.delete')], label: t('shortcuts.delete') },
+        ],
+      },
+      {
+        title: t('shortcuts.typing'),
+        items: [
+          { keys: [t('shortcuts.ex.dateTime')], label: t('shortcuts.dateTime') },
+          { keys: [t('shortcuts.ex.weekday')], label: t('shortcuts.weekday') },
+          { keys: [t('shortcuts.ex.exactDate')], label: t('shortcuts.exactDate') },
+          { keys: [t('shortcuts.ex.repeat')], label: t('shortcuts.repeat') },
+          { keys: [t('shortcuts.ex.tag')], label: t('shortcuts.tag') },
+          { keys: [t('shortcuts.ex.prio')], label: t('shortcuts.prio') },
+        ],
+      },
+    ];
+  });
 }

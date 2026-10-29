@@ -164,6 +164,19 @@
   gap: 4px;
 }
 
+.footer-icons {
+  display: flex;
+  gap: 2px;
+}
+
+.lang-button {
+  width: auto;
+  padding: 0 7px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
 .footer-button {
   display: flex;
   align-items: center;

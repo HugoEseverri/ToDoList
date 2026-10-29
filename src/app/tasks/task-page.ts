@@ -17,11 +17,18 @@ import {
 } from '@angular/core';
 import { AppEvents } from '../core/app-events';
 import { Clock } from '../core/clock';
-import { capitalize, formatDayMonth, formatLongDate, formatRelativeDay } from '../core/dates';
+import {
+  capitalize,
+  formatDayMonth,
+  formatLongDate,
+  formatRelativeDay,
+  localDay,
+} from '../core/dates';
 import { Task } from '../core/task';
 import { TaskStore } from '../core/task-store';
 import { Toast } from '../core/toast';
 import { VIEWS, ViewId } from '../core/views';
+import { I18n } from '../i18n/i18n';
 import { Icon, IconName } from '../ui/icon';
 import { QuickAdd, QuickAddDefaults } from './quick-add';
 import { TaskItem } from './task-item';
@@ -38,38 +45,12 @@ interface Section {
   showDates: boolean;
 }
 
-interface EmptyState {
-  icon: IconName;
-  title: string;
-  text: string;
-}
-
-const EMPTY_STATES: Record<ViewId | 'tag', EmptyState> = {
-  hoy: {
-    icon: 'sun',
-    title: 'Nada pendiente para hoy',
-    text: 'Disfrutá el día o adelantá algo de Próximas.',
-  },
-  proximas: {
-    icon: 'calendar',
-    title: 'Sin tareas programadas',
-    text: 'Agregá una fecha: "el viernes", "15/11", "en 3 días".',
-  },
-  todas: {
-    icon: 'inbox',
-    title: 'Bandeja vacía',
-    text: 'Todo lo que agregues sin fecha aparece acá.',
-  },
-  completadas: {
-    icon: 'circle-check',
-    title: 'Todavía no completaste tareas',
-    text: 'Las tareas que termines van a aparecer acá.',
-  },
-  tag: {
-    icon: 'hash',
-    title: 'Sin tareas pendientes',
-    text: 'No queda nada pendiente con esta etiqueta.',
-  },
+const EMPTY_ICONS: Record<ViewId | 'tag', IconName> = {
+  hoy: 'sun',
+  proximas: 'calendar',
+  todas: 'inbox',
+  completadas: 'circle-check',
+  tag: 'hash',
 };
 
 @Component({
@@ -85,6 +66,8 @@ export class TaskPage {
   private readonly toast = inject(Toast);
   private readonly events = inject(AppEvents);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly i18n = inject(I18n);
+  protected readonly t = this.i18n.t;
 
   /** Vienen de la ruta (`data.view` y el parámetro `:tag`). */
   readonly view = input<ViewId>();
@@ -93,13 +76,16 @@ export class TaskPage {
   protected readonly meta = computed(() => {
     const tag = this.tag();
     if (tag) return { label: `#${tag}`, icon: 'hash' as IconName };
-    return VIEWS.find((v) => v.id === this.view())!;
+    const view = VIEWS.find((v) => v.id === this.view())!;
+    return { label: this.t(`view.${view.id}`), icon: view.icon };
   });
 
   protected readonly subtitle = computed(() => {
-    if (this.view() === 'hoy') return capitalize(formatLongDate(this.clock.today()));
+    if (this.view() === 'hoy') {
+      return capitalize(formatLongDate(this.clock.today(), this.i18n.lang()));
+    }
     const count = this.sections().reduce((sum, s) => sum + s.tasks.length, 0);
-    return count === 1 ? '1 tarea' : `${count} tareas`;
+    return this.i18n.plural('page.tasks', count);
   });
 
   protected readonly quickAddDefaults = computed<QuickAddDefaults>(() => {
@@ -116,28 +102,31 @@ export class TaskPage {
 
   protected readonly sections = computed<Section[]>(() => {
     const today = this.clock.today();
+    const lang = this.i18n.lang();
     const tag = this.tag();
-    if (tag)
+    if (tag) {
       return [
         { id: 'tag', tasks: this.store.pendingWithTag(tag), sortable: true, showDates: true },
       ];
+    }
 
     switch (this.view()) {
       case 'hoy': {
         const overdue = this.store.overdue();
         const sections: Section[] = [];
-        if (overdue.length)
+        if (overdue.length) {
           sections.push({
             id: 'overdue',
-            label: 'Vencidas',
+            label: this.t('page.overdue'),
             tone: 'danger',
             tasks: overdue,
             sortable: true,
             showDates: true,
           });
+        }
         sections.push({
           id: 'today',
-          label: overdue.length ? 'Hoy' : undefined,
+          label: overdue.length ? this.t('page.today') : undefined,
           tasks: this.store.dueToday(),
           sortable: true,
           showDates: false,
@@ -147,17 +136,17 @@ export class TaskPage {
       case 'proximas':
         return groupBy(this.store.upcoming(), (t) => t.due!).map(([due, tasks]) => ({
           id: due,
-          label: formatRelativeDay(due, today),
-          sublabel: formatDayMonth(due),
+          label: formatRelativeDay(due, today, lang),
+          sublabel: formatDayMonth(due, lang),
           tasks,
           sortable: false,
           showDates: false,
         }));
       case 'completadas':
-        return groupBy(this.store.completed(), (t) => t.completedAt!.slice(0, 10)).map(
+        return groupBy(this.store.completed(), (t) => localDay(t.completedAt!)).map(
           ([day, tasks]) => ({
             id: day,
-            label: formatRelativeDay(day, today),
+            label: formatRelativeDay(day, today, lang),
             tasks,
             sortable: false,
             showDates: true,
@@ -169,7 +158,14 @@ export class TaskPage {
   });
 
   protected readonly isEmpty = computed(() => this.sections().every((s) => !s.tasks.length));
-  protected readonly emptyState = computed(() => EMPTY_STATES[this.tag() ? 'tag' : this.view()!]);
+  protected readonly emptyState = computed(() => {
+    const key = this.tag() ? 'tag' : this.view()!;
+    return {
+      icon: EMPTY_ICONS[key],
+      title: this.t(`empty.${key}.title`),
+      text: this.t(`empty.${key}.text`),
+    };
+  });
 
   constructor() {
     // Enfoca la tarea elegida en la paleta de comandos una vez que la vista está en pantalla.
@@ -192,12 +188,12 @@ export class TaskPage {
   }
 
   protected clearCompleted(): void {
-    const removed = this.store.clearCompleted();
-    if (removed.length) {
-      this.toast.undoable(
-        removed.length === 1 ? 'Se borró 1 tarea' : `Se borraron ${removed.length} tareas`,
-        () => this.store.restore(...removed),
-      );
+    const { count, undo } = this.store.clearCompleted();
+    if (count) {
+      this.toast.show(this.i18n.plural('page.cleared', count), {
+        actionLabel: this.t('task.undo'),
+        action: undo,
+      });
     }
   }
 }

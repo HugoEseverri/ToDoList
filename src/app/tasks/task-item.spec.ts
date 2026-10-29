@@ -1,46 +1,36 @@
-import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { Clock } from '../core/clock';
+import { TaskDetailState } from '../core/task-detail-state';
 import { TaskStore } from '../core/task-store';
-import { STORAGE_KEY } from '../core/task-storage';
 import { Toast } from '../core/toast';
+import { parsed, resetStorage, testProviders } from '../testing/test-helpers';
 import { TaskItem } from './task-item';
 
-class FakeClock {
-  readonly today = signal('2026-10-29');
-  now() {
-    return new Date('2026-10-29T12:00:00');
-  }
-}
-
-async function setup() {
-  localStorage.setItem(STORAGE_KEY, '[]');
-  TestBed.configureTestingModule({ providers: [{ provide: Clock, useClass: FakeClock }] });
+async function setup(extra: Parameters<typeof parsed>[1] = {}) {
+  TestBed.configureTestingModule({ providers: testProviders });
   const store = TestBed.inject(TaskStore);
-  const task = store.add({
-    title: 'Comprar pan',
-    due: '2026-10-28',
-    time: null,
-    tags: ['casa'],
-    priority: 0,
-  });
+  const task = store.add(parsed('Comprar pan', { due: '2026-10-28', tags: ['casa'], ...extra }));
 
   const fixture = TestBed.createComponent(TaskItem);
   fixture.componentRef.setInput('task', task);
   await fixture.whenStable();
 
   const element = fixture.nativeElement as HTMLElement;
+  // El componente tiene que estar en el documento para poder recibir el foco.
+  document.body.appendChild(element);
   const row = element.querySelector<HTMLElement>('[data-task-row]')!;
-  const press = async (key: string) => {
-    row.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true }));
-    fixture.componentRef.setInput('task', store.tasks().find((t) => t.id === task.id) ?? task);
+  const refresh = async () => {
+    fixture.componentRef.setInput('task', store.get(task.id) ?? task);
     await fixture.whenStable();
   };
-  return { fixture, element, row, press, store, task };
+  const press = async (key: string) => {
+    row.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true }));
+    await refresh();
+  };
+  return { fixture, element, row, press, refresh, store, task };
 }
 
 describe('TaskItem', () => {
-  beforeEach(() => localStorage.clear());
+  beforeEach(() => resetStorage());
   afterEach(() => vi.useRealTimers());
 
   it('muestra título, fecha vencida y etiquetas', async () => {
@@ -50,26 +40,38 @@ describe('TaskItem', () => {
     expect(element.querySelector('.tag')!.textContent).toContain('#casa');
   });
 
+  it('muestra repetición y progreso de subtareas', async () => {
+    const { element, store, task, refresh } = await setup({
+      repeat: { unit: 'day', every: 1 },
+    });
+    store.addSubtask(task.id, 'Uno');
+    store.addSubtask(task.id, 'Dos');
+    await refresh();
+    const meta = element.querySelector('.meta')!.textContent!;
+    expect(meta).toContain('Todos los días');
+    expect(meta).toContain('0/2');
+  });
+
   it('completa con Espacio después de la animación y ofrece deshacer', async () => {
     const { row, store, task } = await setup();
     vi.useFakeTimers();
     row.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true }));
-    expect(store.tasks()[0].done).toBe(false);
+    expect(store.get(task.id)!.done).toBe(false);
     vi.advanceTimersByTime(500);
-    expect(store.tasks()[0].done).toBe(true);
+    expect(store.get(task.id)!.done).toBe(true);
 
     const toast = TestBed.inject(Toast);
     expect(toast.current()?.actionLabel).toBe('Deshacer');
     toast.runAction();
-    expect(store.tasks().find((t) => t.id === task.id)?.done).toBe(false);
+    expect(store.get(task.id)!.done).toBe(false);
   });
 
   it('cambia la prioridad con P', async () => {
-    const { press, store } = await setup();
+    const { press, store, task } = await setup();
     await press('p');
-    expect(store.tasks()[0].priority).toBe(3);
+    expect(store.get(task.id)!.priority).toBe(3);
     await press('p');
-    expect(store.tasks()[0].priority).toBe(2);
+    expect(store.get(task.id)!.priority).toBe(2);
   });
 
   it('elimina con Supr y permite deshacer', async () => {
@@ -80,17 +82,32 @@ describe('TaskItem', () => {
     expect(store.tasks()).toHaveLength(1);
   });
 
-  it('edita con Enter interpretando lenguaje natural', async () => {
-    const { press, element, fixture, store } = await setup();
-    // El componente tiene que estar en el documento para poder recibir el foco.
-    document.body.appendChild(element);
+  it('abre el detalle con Enter o con un clic', async () => {
+    const { press, row, task } = await setup();
+    const detail = TestBed.inject(TaskDetailState);
     await press('Enter');
+    expect(detail.openId()).toBe(task.id);
+    detail.close();
+    row.querySelector<HTMLElement>('.title')!.click();
+    expect(detail.openId()).toBe(task.id);
+  });
+
+  it('un clic en el checkbox no abre el detalle', async () => {
+    const { row } = await setup();
+    vi.useFakeTimers();
+    row.querySelector<HTMLElement>('.check')!.click();
+    expect(TestBed.inject(TaskDetailState).openId()).toBeNull();
+  });
+
+  it('edita el título con E interpretando lenguaje natural', async () => {
+    const { press, element, fixture, store, task } = await setup();
+    await press('e');
     const input = element.querySelector<HTMLInputElement>('.edit-input')!;
     expect(document.activeElement).toBe(input);
     input.value = 'Comprar pan integral mañana #super';
     input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
     await fixture.whenStable();
-    expect(store.tasks()[0]).toMatchObject({
+    expect(store.get(task.id)).toMatchObject({
       title: 'Comprar pan integral',
       due: '2026-10-30',
       tags: ['casa', 'super'],

@@ -36,17 +36,78 @@
   }
 }
 
-.input {
+/*
+ * El input y la capa de resaltado se superponen con la misma tipografía: el texto del input es
+ * transparente (solo se ve el cursor) y la capa de abajo dibuja el texto con los tokens coloreados.
+ */
+.field {
+  position: relative;
   flex: 1;
   min-width: 0;
   height: 100%;
+}
+
+.mirror,
+.input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
   padding: 0;
   border: 0;
+  font: inherit;
+  font-size: 14px;
+  letter-spacing: normal;
+  line-height: 42px;
+  white-space: pre;
+}
+
+.mirror {
+  overflow: hidden;
+  color: var(--text);
+  pointer-events: none;
+}
+
+.input {
+  width: 100%;
   outline: none;
   background: transparent;
+  color: transparent;
+  caret-color: var(--text);
 
   &::placeholder {
     color: var(--text-faint);
+  }
+
+  &::selection {
+    background: var(--accent-soft);
+    color: transparent;
+  }
+}
+
+/* Sin padding ni negrita: cambiarían el ancho del texto y desalinearían el cursor. */
+.token {
+  border-radius: 4px;
+  box-shadow: 0 0 0 2px var(--token-bg);
+  background: var(--token-bg);
+  color: var(--token-fg);
+}
+
+.token-date,
+.token-time,
+.token-repeat {
+  --token-fg: var(--accent);
+  --token-bg: var(--accent-soft);
+}
+
+.token-tag {
+  --token-fg: var(--text-muted);
+  --token-bg: var(--surface-active);
+}
+
+@each $level in 1, 2, 3 {
+  .token-priority-#{$level} {
+    --token-fg: var(--priority-#{$level});
+    --token-bg: color-mix(in srgb, var(--priority-#{$level}) 14%, transparent);
   }
 }
 
@@ -92,7 +153,8 @@
   font-weight: 500;
 }
 
-.chip-due {
+.chip-date,
+.chip-repeat {
   background: var(--accent-soft);
   color: var(--accent);
 }

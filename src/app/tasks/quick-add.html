@@ -1,18 +1,29 @@
 <form class="quick-add" [class.has-text]="text()" (submit)="$event.preventDefault(); submit()">
   <span class="plus" aria-hidden="true"><app-icon name="plus" [size]="16" /></span>
-  <input
-    #input
-    class="input"
-    type="text"
-    autocomplete="off"
-    enterkeyhint="done"
-    aria-label="Nueva tarea"
-    aria-describedby="quick-add-hint"
-    placeholder="Agregar tarea…"
-    [value]="text()"
-    (input)="text.set(input.value)"
-    (keydown.escape)="onEscape()"
-  />
+  <div class="field">
+    <!--
+      Sin espacios entre los fragmentos: cualquier espacio de más desalinearía el texto respecto
+      del cursor del input. Por eso este bloque no se formatea.
+    -->
+    <!-- prettier-ignore -->
+    <div #mirror class="mirror" aria-hidden="true">@for (segment of segments(); track $index) {<span [class]="segment.kind ? 'token token-' + segment.kind : null">{{ segment.text }}</span>}</div>
+    <input
+      #input
+      class="input"
+      type="text"
+      autocomplete="off"
+      spellcheck="false"
+      enterkeyhint="done"
+      [attr.aria-label]="t('quickAdd.label')"
+      aria-describedby="quick-add-hint"
+      [placeholder]="t('quickAdd.placeholder')"
+      [value]="text()"
+      (input)="onInput(input.value)"
+      (scroll)="syncScroll()"
+      (keyup)="syncScroll()"
+      (keydown.escape)="onEscape()"
+    />
+  </div>
   @if (text().trim()) {
     <kbd class="enter-hint" aria-hidden="true">↵</kbd>
   } @else {
@@ -28,6 +39,8 @@
       }
     </div>
   } @else if (!text()) {
-    <p class="hint">Probá: <span class="example">Pagar la luz mañana 18hs #casa !alta</span></p>
+    <p class="hint">
+      {{ t('quickAdd.try') }} <span class="example">{{ t('quickAdd.example') }}</span>
+    </p>
   }
 </div>

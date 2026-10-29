@@ -10,7 +10,8 @@
   @if (view() === 'hoy' && progress().total) {
     <div
       class="progress"
-      [attr.aria-label]="progress().done + ' de ' + progress().total + ' tareas de hoy completadas'"
+      role="img"
+      [attr.aria-label]="t('page.progress', { done: progress().done, total: progress().total })"
     >
       <svg viewBox="0 0 36 36" aria-hidden="true">
         <circle class="track" cx="18" cy="18" r="15" />
@@ -29,7 +30,7 @@
   @if (view() === 'completadas' && !isEmpty()) {
     <button type="button" class="text-button" (click)="clearCompleted()">
       <app-icon name="trash" [size]="14" />
-      Borrar completadas
+      {{ t('page.clearCompleted') }}
     </button>
   }
 </header>

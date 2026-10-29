@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { Toast } from '../core/toast';
+import { I18n } from '../i18n/i18n';
 import { Icon } from '../ui/icon';
 
 @Component({
@@ -20,7 +21,7 @@ import { Icon } from '../ui/icon';
             <button
               type="button"
               class="icon-button close"
-              aria-label="Cerrar aviso"
+              [attr.aria-label]="t('toast.close')"
               (click)="toast.dismiss()"
             >
               <app-icon name="x" [size]="14" />
@@ -89,4 +90,5 @@ import { Icon } from '../ui/icon';
 })
 export class ToastOutlet {
   protected readonly toast = inject(Toast);
+  protected readonly t = inject(I18n).t;
 }
