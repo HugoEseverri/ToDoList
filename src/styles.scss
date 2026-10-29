@@ -1,11 +1,211 @@
-body {
-    font-family: Arial, sans-serif;
-    background: #121212;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+/* Tokens de diseño. Oscuro por defecto según el sistema; `data-theme` fuerza claro u oscuro. */
 
+:root {
+  --font-sans: 'Inter Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  --radius-sm: 6px;
+  --radius: 8px;
+  --radius-lg: 12px;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --sidebar-width: 248px;
+
+  color-scheme: light;
+  --bg: #fbfbfc;
+  --bg-sidebar: #f4f4f6;
+  --surface: #ffffff;
+  --surface-hover: #f1f1f4;
+  --surface-active: #e9e9ee;
+  --border: #e6e6ea;
+  --border-strong: #d4d5db;
+  --text: #1b1c1f;
+  --text-muted: #62666e;
+  --text-faint: #9a9da5;
+  --accent: #5b51e6;
+  --accent-hover: #4c42d6;
+  --accent-soft: rgb(91 81 230 / 0.1);
+  --accent-contrast: #ffffff;
+  --danger: #dc3b40;
+  --danger-soft: rgb(220 59 64 / 0.1);
+  --priority-3: #e5484d;
+  --priority-2: #e38a0b;
+  --priority-1: #3b82f6;
+  --success: #1f9d6b;
+  --shadow-lg: 0 16px 48px rgb(15 16 20 / 0.14), 0 2px 6px rgb(15 16 20 / 0.06);
+  --scrim: rgb(15 16 20 / 0.32);
 }
-html, body { height: 100%; }
-body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
 
+@mixin dark-tokens {
+  color-scheme: dark;
+  --bg: #0f1013;
+  --bg-sidebar: #131418;
+  --surface: #18191d;
+  --surface-hover: #1e1f24;
+  --surface-active: #25272d;
+  --border: #25272d;
+  --border-strong: #33363e;
+  --text: #e7e8eb;
+  --text-muted: #9095a0;
+  --text-faint: #5f636c;
+  --accent: #7f77ff;
+  --accent-hover: #918aff;
+  --accent-soft: rgb(127 119 255 / 0.14);
+  --accent-contrast: #ffffff;
+  --danger: #f2555a;
+  --danger-soft: rgb(242 85 90 / 0.12);
+  --priority-3: #f2555a;
+  --priority-2: #f5a524;
+  --priority-1: #5b9cff;
+  --success: #3ecf8e;
+  --shadow-lg: 0 16px 48px rgb(0 0 0 / 0.5), 0 0 0 1px rgb(255 255 255 / 0.04);
+  --scrim: rgb(0 0 0 / 0.5);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    @include dark-tokens;
+  }
+}
+
+:root[data-theme='dark'] {
+  @include dark-tokens;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.5;
+  font-feature-settings: 'cv11', 'ss01';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+button,
+input {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: var(--accent-soft);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Botón de ícono reutilizable. */
+.icon-button {
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-muted);
+  transition:
+    background-color 120ms,
+    color 120ms;
+
+  &:hover {
+    background: var(--surface-active);
+    color: var(--text);
+  }
+}
+
+kbd {
+  display: inline-grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border: 1px solid var(--border-strong);
+  border-bottom-width: 2px;
+  border-radius: 5px;
+  background: var(--surface);
+  color: var(--text-muted);
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1;
+}
+
+/* Diálogos del CDK (paleta de comandos y atajos). */
+.cdk-overlay-dark-backdrop {
+  background: var(--scrim);
+}
+
+.app-dialog-panel {
+  width: min(620px, calc(100vw - 32px));
+}
+
+/* Animaciones de entrada/salida usadas con `animate.enter` / `animate.leave`. */
+@keyframes fade-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes fade-slide-out {
+  to {
+    opacity: 0;
+    transform: translateX(12px);
+  }
+}
+
+@keyframes dialog-in {
+  from {
+    opacity: 0;
+    transform: scale(0.97) translateY(-8px);
+  }
+}
+
+.enter {
+  animation: fade-slide-in 220ms var(--ease-out);
+}
+
+.leave {
+  animation: fade-slide-out 180ms ease-in forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    transition-duration: 1ms !important;
+  }
+}

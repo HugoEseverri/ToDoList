@@ -1,0 +1,91 @@
+<header class="header">
+  <div class="heading">
+    <span class="heading-icon"><app-icon [name]="meta().icon" [size]="18" /></span>
+    <div>
+      <h1>{{ meta().label }}</h1>
+      <p class="subtitle">{{ subtitle() }}</p>
+    </div>
+  </div>
+
+  @if (view() === 'hoy' && progress().total) {
+    <div
+      class="progress"
+      [attr.aria-label]="progress().done + ' de ' + progress().total + ' tareas de hoy completadas'"
+    >
+      <svg viewBox="0 0 36 36" aria-hidden="true">
+        <circle class="track" cx="18" cy="18" r="15" />
+        <circle
+          class="value"
+          cx="18"
+          cy="18"
+          r="15"
+          [style.stroke-dashoffset]="94.25 * (1 - progress().ratio)"
+        />
+      </svg>
+      <span>{{ progress().done }}/{{ progress().total }}</span>
+    </div>
+  }
+
+  @if (view() === 'completadas' && !isEmpty()) {
+    <button type="button" class="text-button" (click)="clearCompleted()">
+      <app-icon name="trash" [size]="14" />
+      Borrar completadas
+    </button>
+  }
+</header>
+
+@if (view() !== 'completadas') {
+  <app-quick-add
+    class="quick-add"
+    [defaults]="quickAddDefaults()"
+    [currentView]="tag() ? null : (view() ?? null)"
+  />
+}
+
+@if (isEmpty()) {
+  <div class="empty enter">
+    <span class="empty-icon"><app-icon [name]="emptyState().icon" [size]="22" /></span>
+    <h2>{{ emptyState().title }}</h2>
+    <p>{{ emptyState().text }}</p>
+  </div>
+} @else {
+  @for (section of sections(); track section.id) {
+    @if (section.tasks.length) {
+      <section class="section" [attr.aria-label]="section.label ?? meta().label">
+        @if (section.label) {
+          <h2 class="section-title" [class.danger]="section.tone === 'danger'">
+            {{ section.label }}
+            @if (section.sublabel) {
+              <span class="section-sublabel">{{ section.sublabel }}</span>
+            }
+            <span class="section-count">{{ section.tasks.length }}</span>
+          </h2>
+        }
+        <div
+          class="list"
+          role="list"
+          cdkDropList
+          cdkDropListLockAxis="y"
+          [cdkDropListDisabled]="!section.sortable"
+          [cdkDropListData]="section.tasks"
+          (cdkDropListDropped)="drop(section, $event)"
+        >
+          @for (task of section.tasks; track task.id) {
+            <app-task-item
+              role="listitem"
+              cdkDrag
+              [cdkDragData]="task"
+              [cdkDragStartDelay]="{ touch: 250, mouse: 0 }"
+              [task]="task"
+              [showDate]="section.showDates"
+              animate.enter="enter"
+              animate.leave="leave"
+            >
+              <div *cdkDragPlaceholder class="drag-placeholder"></div>
+            </app-task-item>
+          }
+        </div>
+      </section>
+    }
+  }
+}

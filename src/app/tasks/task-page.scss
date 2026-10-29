@@ -1,0 +1,199 @@
+:host {
+  display: block;
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 48px 32px 96px;
+
+  @media (max-width: 820px) {
+    padding: 20px 16px 96px;
+  }
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.heading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+
+  h1 {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+    overflow-wrap: anywhere;
+  }
+}
+
+.heading-icon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.subtitle {
+  margin: 2px 0 0;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.progress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+
+  svg {
+    width: 22px;
+    height: 22px;
+    transform: rotate(-90deg);
+  }
+
+  circle {
+    fill: none;
+    stroke-width: 4;
+  }
+
+  .track {
+    stroke: var(--border-strong);
+  }
+
+  .value {
+    stroke: var(--success);
+    stroke-linecap: round;
+    stroke-dasharray: 94.25;
+    transition: stroke-dashoffset 500ms var(--ease-out);
+  }
+}
+
+.text-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  height: 30px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 13px;
+
+  &:hover {
+    border-color: var(--danger);
+    background: var(--danger-soft);
+    color: var(--danger);
+  }
+}
+
+.quick-add {
+  margin-bottom: 12px;
+}
+
+.section + .section {
+  margin-top: 24px;
+}
+
+.section-title {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 0 0 4px;
+  padding: 0 10px 8px;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+  font-weight: 600;
+
+  &.danger {
+    color: var(--danger);
+  }
+}
+
+.section-sublabel {
+  color: var(--text-faint);
+  font-weight: 400;
+}
+
+.section-count {
+  margin-left: auto;
+  color: var(--text-faint);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Arrastrar y soltar (CDK). */
+.cdk-drag-preview {
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow-lg);
+  opacity: 0.96;
+}
+
+.drag-placeholder {
+  height: 40px;
+  margin: 1px 0;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--surface-hover);
+}
+
+.cdk-drop-list-dragging app-task-item:not(.cdk-drag-placeholder) {
+  transition: transform 220ms var(--ease-out);
+}
+
+.cdk-drag-animating {
+  transition: transform 220ms var(--ease-out);
+}
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 64px 16px;
+  text-align: center;
+
+  h2 {
+    margin: 16px 0 4px;
+    font-size: 15px;
+    font-weight: 600;
+  }
+
+  p {
+    max-width: 320px;
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 13px;
+  }
+}
+
+.empty-icon {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+  color: var(--text-faint);
+}

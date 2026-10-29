@@ -1,0 +1,79 @@
+<div class="brand">
+  <span class="logo" aria-hidden="true">
+    <svg viewBox="0 0 24 24"><path d="M6.5 12.5 10.5 16.5 17.5 8" /></svg>
+  </span>
+  <span class="brand-name">Hecho</span>
+</div>
+
+<button type="button" class="search" (click)="openPalette()">
+  <app-icon name="search" [size]="15" />
+  <span>Buscar o ejecutar…</span>
+  <span class="search-keys" aria-hidden="true"><kbd>Ctrl</kbd><kbd>K</kbd></span>
+</button>
+
+<nav class="nav" aria-label="Vistas">
+  @for (view of views; track view.id) {
+    <a
+      class="nav-item"
+      [routerLink]="['/', view.id]"
+      routerLinkActive="is-active"
+      ariaCurrentWhenActive="page"
+      (click)="navigate.emit()"
+    >
+      <app-icon [name]="view.icon" [size]="16" />
+      <span class="nav-label">{{ view.label }}</span>
+      @if (counts()[view.id]) {
+        <span class="count">{{ counts()[view.id] }}</span>
+      }
+    </a>
+  }
+</nav>
+
+@if (store.tags().length) {
+  <nav class="nav tags" aria-labelledby="tags-title">
+    <h2 id="tags-title" class="nav-title">Etiquetas</h2>
+    @for (tag of store.tags(); track tag.name) {
+      <a
+        class="nav-item"
+        [routerLink]="['/etiqueta', tag.name]"
+        routerLinkActive="is-active"
+        ariaCurrentWhenActive="page"
+        (click)="navigate.emit()"
+      >
+        <app-icon name="hash" [size]="15" />
+        <span class="nav-label">{{ tag.name }}</span>
+        @if (tag.count) {
+          <span class="count">{{ tag.count }}</span>
+        }
+      </a>
+    }
+  </nav>
+}
+
+<footer class="footer">
+  @if (store.completedToday()) {
+    <p class="streak">
+      <app-icon name="sparkles" [size]="14" />
+      {{
+        store.completedToday() === 1
+          ? '1 tarea completada hoy'
+          : store.completedToday() + ' tareas completadas hoy'
+      }}
+    </p>
+  }
+  <div class="footer-actions">
+    <button type="button" class="footer-button" [title]="themeMeta().label" (click)="theme.cycle()">
+      <app-icon [name]="themeMeta().icon" [size]="15" />
+      <span>{{ themeMeta().label }}</span>
+    </button>
+    <button
+      type="button"
+      class="icon-button"
+      title="Atajos de teclado (?)"
+      aria-label="Atajos de teclado"
+      (click)="openShortcuts()"
+    >
+      <app-icon name="keyboard" [size]="16" />
+    </button>
+  </div>
+</footer>

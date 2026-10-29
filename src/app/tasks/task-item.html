@@ -1,0 +1,120 @@
+<div
+  class="row"
+  data-task-row
+  [attr.data-task-id]="task().id"
+  tabindex="0"
+  [class.is-done]="checked()"
+  [class.is-editing]="editing()"
+  [attr.aria-label]="task().title"
+  (keydown)="onKeydown($event)"
+  (dblclick)="startEdit()"
+>
+  <button
+    type="button"
+    class="check"
+    [class]="'priority-' + task().priority"
+    role="checkbox"
+    [attr.aria-checked]="checked()"
+    [attr.aria-label]="(checked() ? 'Marcar como pendiente: ' : 'Completar: ') + task().title"
+    tabindex="-1"
+    (click)="complete(); $event.stopPropagation()"
+  >
+    <svg viewBox="0 0 16 16" aria-hidden="true">
+      <path d="M4 8.5 6.8 11 12 5.5" />
+    </svg>
+  </button>
+
+  <div class="content">
+    @if (editing()) {
+      <input
+        #editInput
+        class="edit-input"
+        [value]="task().title"
+        aria-label="Editar tarea"
+        (keydown.enter)="saveEdit(editInput.value)"
+        (keydown.escape)="cancelEdit()"
+        (blur)="saveEdit(editInput.value)"
+      />
+    } @else {
+      <span class="title">{{ task().title }}</span>
+    }
+
+    @if ((showDate() && dueLabel()) || task().time || task().tags.length) {
+      <div class="meta">
+        @if (showDate() && dueLabel()) {
+          <span class="chip due" [class]="'due-' + dueState()">
+            <app-icon name="calendar" [size]="12" />
+            {{ dueLabel() }}
+          </span>
+        }
+        @if (task().time) {
+          <span class="chip">
+            <app-icon name="clock" [size]="12" />
+            {{ task().time }}
+          </span>
+        }
+        @for (tag of task().tags; track tag) {
+          <span class="chip tag">
+            #{{ tag }}
+            @if (editing()) {
+              <button
+                type="button"
+                class="tag-remove"
+                [attr.aria-label]="'Quitar etiqueta ' + tag"
+                (mousedown)="$event.preventDefault()"
+                (click)="removeTag(tag)"
+              >
+                <app-icon name="x" [size]="10" />
+              </button>
+            }
+          </span>
+        }
+      </div>
+    }
+  </div>
+
+  <div class="actions">
+    @if (!task().done) {
+      <button
+        type="button"
+        class="icon-button date-button"
+        tabindex="-1"
+        title="Fecha (D)"
+        aria-label="Cambiar fecha"
+        (click)="openDatePicker()"
+      >
+        <app-icon name="calendar" [size]="15" />
+        <input
+          #dateInput
+          type="date"
+          class="date-input"
+          tabindex="-1"
+          aria-hidden="true"
+          [value]="task().due ?? ''"
+          (change)="setDate(dateInput.value)"
+        />
+      </button>
+      <button
+        type="button"
+        class="icon-button flag"
+        [class]="'priority-' + task().priority"
+        tabindex="-1"
+        [title]="'Prioridad: ' + priorityLabel() + ' (P)'"
+        [attr.aria-label]="'Prioridad: ' + priorityLabel()"
+        (click)="cyclePriority()"
+      >
+        <app-icon name="flag" [size]="15" />
+      </button>
+    }
+    <button
+      type="button"
+      class="icon-button delete"
+      tabindex="-1"
+      title="Eliminar (Supr)"
+      aria-label="Eliminar tarea"
+      (click)="remove()"
+    >
+      <app-icon name="trash" [size]="15" />
+    </button>
+  </div>
+</div>

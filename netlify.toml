@@ -1,0 +1,17 @@
+[build]
+  command = "npm run build"
+  publish = "dist/hecho/browser"
+
+[build.environment]
+  NODE_VERSION = "24"
+
+# El service worker tiene que revalidarse siempre para que las actualizaciones lleguen.
+[[headers]]
+  for = "/ngsw-worker.js"
+  [headers.values]
+    Cache-Control = "no-cache"
+
+[[headers]]
+  for = "/*.js"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"

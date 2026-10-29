@@ -1,15 +1,30 @@
 <!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <title>Listas con Angular</title>
-  <base href="/">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="icon" type="image/x-icon" href="favicon.ico">
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-</head>
-<body class="mat-typography">
-  <app-root></app-root>
-</body>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <title>Hecho</title>
+    <base href="/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta
+      name="description"
+      content="Hecho: gestor de tareas rápido, con carga en lenguaje natural, atajos de teclado y modo sin conexión."
+    />
+    <meta name="theme-color" content="#fbfbfc" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0f1013" media="(prefers-color-scheme: dark)" />
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <script>
+      // Aplica el tema guardado antes del primer pintado para evitar un parpadeo.
+      try {
+        var theme = localStorage.getItem('hecho.theme');
+        if (theme === 'light' || theme === 'dark')
+          document.documentElement.setAttribute('data-theme', theme);
+      } catch (e) {}
+    </script>
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+  </head>
+  <body>
+    <app-root></app-root>
+    <noscript>Hecho necesita JavaScript para funcionar.</noscript>
+  </body>
 </html>

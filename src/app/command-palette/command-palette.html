@@ -1,0 +1,57 @@
+<div class="palette">
+  <div class="search">
+    <app-icon name="search" [size]="17" />
+    <input
+      class="search-input"
+      type="text"
+      placeholder="Buscar tareas o escribir un comando…"
+      autocomplete="off"
+      role="combobox"
+      aria-expanded="true"
+      aria-controls="palette-list"
+      aria-autocomplete="list"
+      [attr.aria-activedescendant]="
+        items()[activeIndex()] ? 'palette-' + items()[activeIndex()].id : null
+      "
+      [value]="query()"
+      (input)="query.set($any($event.target).value)"
+      (keydown)="onKeydown($event)"
+      cdkFocusInitial
+    />
+    <kbd>Esc</kbd>
+  </div>
+
+  <div #list id="palette-list" class="list" role="listbox" aria-label="Resultados">
+    @for (item of items(); track item.id; let i = $index) {
+      @if (i === 0 || items()[i - 1].group !== item.group) {
+        <div class="group" role="presentation">{{ item.group }}</div>
+      }
+      <div
+        class="item"
+        role="option"
+        [id]="'palette-' + item.id"
+        [attr.aria-selected]="i === activeIndex()"
+        (mouseenter)="activeIndex.set(i)"
+        (click)="run(item)"
+      >
+        <app-icon [name]="item.icon" [size]="16" />
+        <span class="label">{{ item.label }}</span>
+        @if (item.hint) {
+          @if (item.hint.length === 1) {
+            <kbd>{{ item.hint }}</kbd>
+          } @else {
+            <span class="hint">{{ item.hint }}</span>
+          }
+        }
+      </div>
+    } @empty {
+      <p class="empty">Sin resultados para “{{ query() }}”</p>
+    }
+  </div>
+
+  <footer class="footer" aria-hidden="true">
+    <span><kbd>↑</kbd><kbd>↓</kbd> navegar</span>
+    <span><kbd>↵</kbd> elegir</span>
+    <span><kbd>Esc</kbd> cerrar</span>
+  </footer>
+</div>

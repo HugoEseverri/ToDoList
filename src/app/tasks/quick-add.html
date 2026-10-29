@@ -1,0 +1,33 @@
+<form class="quick-add" [class.has-text]="text()" (submit)="$event.preventDefault(); submit()">
+  <span class="plus" aria-hidden="true"><app-icon name="plus" [size]="16" /></span>
+  <input
+    #input
+    class="input"
+    type="text"
+    autocomplete="off"
+    enterkeyhint="done"
+    aria-label="Nueva tarea"
+    aria-describedby="quick-add-hint"
+    placeholder="Agregar tarea…"
+    [value]="text()"
+    (input)="text.set(input.value)"
+    (keydown.escape)="onEscape()"
+  />
+  @if (text().trim()) {
+    <kbd class="enter-hint" aria-hidden="true">↵</kbd>
+  } @else {
+    <kbd class="focus-hint" aria-hidden="true">N</kbd>
+  }
+</form>
+
+<div class="below" id="quick-add-hint" aria-live="polite">
+  @if (chips().length) {
+    <div class="chips">
+      @for (chip of chips(); track chip.label) {
+        <span class="chip enter" [class]="'chip-' + chip.kind">{{ chip.label }}</span>
+      }
+    </div>
+  } @else if (!text()) {
+    <p class="hint">Probá: <span class="example">Pagar la luz mañana 18hs #casa !alta</span></p>
+  }
+</div>

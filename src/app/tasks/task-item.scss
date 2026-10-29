@@ -1,0 +1,216 @@
+:host {
+  display: block;
+}
+
+.row {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 9px 10px;
+  border-radius: var(--radius);
+  outline: none;
+  transition: background-color 120ms;
+
+  &:hover {
+    background: var(--surface-hover);
+  }
+
+  &:focus-visible {
+    background: var(--surface-hover);
+    box-shadow: inset 0 0 0 1px var(--accent);
+  }
+
+  &.is-editing {
+    background: var(--surface);
+    box-shadow: inset 0 0 0 1px var(--border-strong);
+  }
+}
+
+/* Checkbox circular con el color de la prioridad. */
+.check {
+  --ring: var(--text-faint);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  margin-top: 1px;
+  padding: 0;
+  border: 1.5px solid var(--ring);
+  border-radius: 50%;
+  background: transparent;
+  transition:
+    background-color 180ms var(--ease-out),
+    border-color 180ms,
+    transform 180ms var(--ease-out);
+
+  &.priority-3 {
+    --ring: var(--priority-3);
+  }
+  &.priority-2 {
+    --ring: var(--priority-2);
+  }
+  &.priority-1 {
+    --ring: var(--priority-1);
+  }
+
+  &:hover {
+    background: color-mix(in srgb, var(--ring) 14%, transparent);
+  }
+
+  &:active {
+    transform: scale(0.88);
+  }
+
+  svg {
+    width: 12px;
+    height: 12px;
+    fill: none;
+    stroke: var(--accent-contrast);
+    stroke-width: 2.2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-dasharray: 12;
+    stroke-dashoffset: 12;
+    transition: stroke-dashoffset 220ms var(--ease-out) 60ms;
+  }
+
+  &.priority-0 {
+    --ring: var(--text-faint);
+  }
+}
+
+.is-done .check {
+  border-color: var(--success);
+  background: var(--success);
+  animation: pop 260ms var(--ease-out);
+
+  svg {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes pop {
+  50% {
+    transform: scale(1.15);
+  }
+}
+
+.content {
+  flex: 1;
+  min-width: 0;
+}
+
+.title {
+  display: block;
+  overflow-wrap: anywhere;
+  transition: color 200ms;
+
+  .is-done & {
+    color: var(--text-faint);
+    text-decoration: line-through;
+    text-decoration-color: var(--text-faint);
+  }
+}
+
+.edit-input {
+  width: 100%;
+  padding: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  margin-top: 3px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.due-today {
+  color: var(--accent);
+}
+
+.due-overdue {
+  color: var(--danger);
+}
+
+.tag {
+  color: var(--text-faint);
+}
+
+.tag-remove {
+  display: inline-grid;
+  place-items: center;
+  width: 14px;
+  height: 14px;
+  padding: 0;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: inherit;
+
+  &:hover {
+    background: var(--surface-active);
+  }
+}
+
+.actions {
+  display: flex;
+  gap: 2px;
+  margin: -4px -4px -4px 0;
+  opacity: 0;
+  transition: opacity 120ms;
+
+  .row:hover &,
+  .row:focus-within & {
+    opacity: 1;
+  }
+
+  /* En pantallas táctiles no hay hover: las acciones quedan siempre visibles. */
+  @media (hover: none) {
+    opacity: 1;
+  }
+}
+
+.date-button {
+  position: relative;
+}
+
+/* El input de fecha nativo queda invisible debajo del botón; solo usamos su selector. */
+.date-input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.flag {
+  &.priority-3 {
+    color: var(--priority-3);
+  }
+  &.priority-2 {
+    color: var(--priority-2);
+  }
+  &.priority-1 {
+    color: var(--priority-1);
+  }
+}
+
+.delete:hover {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
